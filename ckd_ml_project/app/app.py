@@ -167,34 +167,40 @@ with tab_home:
 
             ### Machine Learning Pipeline
 
-            | Step | Module |
+            | Step | Details |
             |---|---|
-            | ARFF data loading | `src/data_loader.py` |
-            | Cleaning, imputation, encoding, scaling | `src/preprocess.py` |
-            | Feature correlation & importance | `src/feature_analysis.py` |
-            | Model training + GridSearchCV tuning | `src/model_training.py` |
-            | Metrics & visualisations | `src/evaluation.py` |
-            | Serialisable predictor | `src/prediction.py` |
+            | ARFF data loading | `scipy.io.arff` → pandas DataFrame |
+            | Missing value removal | Drop features with >20% missing |
+            | KNN imputation | `KNNImputer(k=5)` preserves data distribution |
+            | Categorical encoding | `LabelEncoder` per column |
+            | Z-score normalisation | `StandardScaler` fit on train only |
+            | SMOTE oversampling | Balances minority class on training set |
+            | LASSO feature selection | L1 LogisticRegression identifies informative subset |
+            | PCA visualisation | 2-D projection of diagnostic separability |
+            | 10-fold CV (Recall) | Minimises clinical false negatives |
+            | Model selection | Best model ranked by Recall (sensitivity) |
 
             ---
 
-            ### Models Compared
+            ### Models Compared (per clinical specification)
 
             | Model | Key Strength |
             |---|---|
-            | Logistic Regression | Interpretable baseline |
-            | Random Forest | Robust non-linear ensemble |
-            | Support Vector Machine | High-dimensional generalisation |
-            | Gradient Boosting (XGBoost) | State-of-the-art accuracy |
+            | Linear SVM (L2) | Robust structured-data baseline |
+            | Extra Trees | Fast, low-variance ensemble |
+            | XGBoost | State-of-the-art gradient boosting |
+            | LightGBM | Fast tabular gradient boosting |
             """
         )
 
     with col_r:
         st.markdown("### Key Biomarkers")
         for icon, label in [
-            ("🔴", "Hemoglobin"),
-            ("💧", "Specific Gravity"),
-            ("🟡", "Albumin"),
+            ("★", "Hemoglobin"),
+            ("★", "Specific Gravity"),
+            ("★", "Albumin"),
+            ("★", "Hypertension"),
+            ("★", "Diabetes Mellitus"),
             ("🍬", "Blood Glucose"),
             ("🧪", "Blood Urea"),
             ("📈", "Serum Creatinine"),
@@ -345,7 +351,8 @@ with tab_train:
                 predictor = CKDPredictor(
                     model=best_model,
                     scaler=pipeline_data["scaler"],
-                    feature_names=pipeline_data["feature_names"],
+                    all_feature_names=pipeline_data["all_feature_names"],
+                    feature_mask=pipeline_data["feature_mask"],
                     encoders=pipeline_data["encoders"],
                     imputer=pipeline_data["imputer"],
                 )
@@ -365,7 +372,18 @@ with tab_train:
         # ── Results ───────────────────────────────────────────────────────────
         if st.session_state["metrics_df"] is not None:
             st.markdown("---")
-            st.subheader("Model Comparison — Test Set")
+
+            # Feature selection summary
+            pd_data = st.session_state["pipeline_data"]
+            if pd_data is not None:
+                n_sel  = len(pd_data["feature_names"])
+                n_all  = len(pd_data["all_feature_names"])
+                st.info(
+                    f"**LASSO Feature Selection:** {n_sel} / {n_all} features selected.  "
+                    f"Selected: `{'`, `'.join(pd_data['feature_names'])}`"
+                )
+
+            st.subheader("Model Comparison — Test Set  _(primary metric: Recall)_")
 
             metrics_df = st.session_state["metrics_df"]
             display_df = metrics_df.copy()
@@ -375,7 +393,7 @@ with tab_train:
             st.dataframe(display_df, use_container_width=True)
 
             best = st.session_state["best_model_name"]
-            st.success(f"🏆 **Best model selected: {best}**")
+            st.success(f"🏆 **Best model (highest Recall): {best}**")
 
             st.subheader("Best Hyper-parameters per Model")
             for name, info in st.session_state["train_results"].items():
@@ -399,6 +417,8 @@ with tab_viz:
             plot_class_distribution,
             plot_correlation_heatmap,
             plot_feature_importances,
+            plot_lasso_coefficients,
+            plot_pca_scatter,
         )
         from src.evaluation import plot_confusion_matrix, plot_roc_curve
 
@@ -450,6 +470,27 @@ with tab_viz:
                     model_name=best_name,
                 )
                 st.pyplot(fig_cm, use_container_width=True)
+
+        st.markdown("---")
+
+        # ── Row 4: LASSO feature selection + PCA scatter ──────────────────────
+        col_e, col_f = st.columns(2)
+        with col_e:
+            st.subheader("LASSO Feature Selection")
+            fig_lasso = plot_lasso_coefficients(
+                pipeline_data["all_feature_names"],
+                pipeline_data["lasso_coef"],
+                pipeline_data["feature_mask"],
+            )
+            st.pyplot(fig_lasso, use_container_width=True)
+
+        with col_f:
+            st.subheader("PCA — 2D Projection")
+            fig_pca = plot_pca_scatter(
+                pipeline_data["X_train_full"],
+                pipeline_data["y_train"],
+            )
+            st.pyplot(fig_pca, use_container_width=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -517,9 +558,9 @@ with tab_predict:
         inputs: dict = {}
 
         with st.form("ckd_prediction_form"):
-            # Numeric inputs
+            # Numeric inputs — show all numeric features (mask applied internally)
             st.subheader("Numeric Biomarkers")
-            num_keys = [k for k in _NUMERIC_FEATURES if k in predictor.feature_names]
+            num_keys = [k for k in _NUMERIC_FEATURES if k in predictor.all_feature_names]
             for row_keys in [num_keys[i:i+3] for i in range(0, len(num_keys), 3)]:
                 cols = st.columns(3)
                 for col, key in zip(cols, row_keys):
@@ -536,9 +577,9 @@ with tab_predict:
                     )
                     inputs[key] = val
 
-            # Categorical inputs
+            # Categorical inputs — show all categorical features (mask applied internally)
             st.subheader("Categorical Features")
-            cat_keys = [k for k in _CATEGORICAL_FEATURES if k in predictor.feature_names]
+            cat_keys = [k for k in _CATEGORICAL_FEATURES if k in predictor.all_feature_names]
             for row_keys in [cat_keys[i:i+3] for i in range(0, len(cat_keys), 3)]:
                 cols = st.columns(3)
                 for col, key in zip(cols, row_keys):

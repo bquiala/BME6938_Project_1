@@ -11,13 +11,16 @@ Usage
 Steps
 -----
 1.  Load the CKD ARFF dataset.
-2.  Preprocess: clean, encode, impute, scale, split (70 / 15 / 15).
-3.  Generate exploratory figures (class distribution, correlation, importances).
-4.  Train four models with GridSearchCV hyper-parameter tuning.
+2.  Preprocess: clean, encode, impute (KNN), Z-score scale, SMOTE balance,
+    LASSO feature selection; split 70 / 15 / 15.
+3.  Generate exploratory figures (class distribution, correlation, importances,
+    LASSO coefficients, PCA scatter).
+4.  Train LinearSVM, ExtraTrees, XGBoost, LightGBM with 10-fold CV (recall).
 5.  Evaluate all models on the held-out test set.
 6.  Print a summary table to stdout.
 7.  Generate evaluation figures (ROC curves, confusion matrix).
-8.  Save the best model + preprocessing artefacts as ``models/ckd_pipeline.joblib``.
+8.  Save the best model (by recall) + preprocessing artefacts as
+    ``models/ckd_pipeline.joblib``.
 
 All figures are saved as PNG files in ``logs/``.
 All pipeline activity is logged to ``logs/pipeline.log`` and to the console.
@@ -45,6 +48,8 @@ from src.feature_analysis import (
     plot_class_distribution,
     plot_correlation_heatmap,
     plot_feature_importances,
+    plot_lasso_coefficients,
+    plot_pca_scatter,
 )
 from src.model_training import select_best_model, train_models
 from src.prediction import CKDPredictor
@@ -91,11 +96,15 @@ def main(data_path: str | None = None) -> None:
     logger.info("Step 2/7  Preprocessing …")
     pipeline_data = preprocess(df.copy())
 
+    n_sel = len(pipeline_data["feature_names"])
+    n_all = len(pipeline_data["all_feature_names"])
     logger.info(
-        "Train: %d  |  Val: %d  |  Test: %d",
+        "Train: %d  |  Val: %d  |  Test: %d  |  LASSO features: %d / %d",
         len(pipeline_data["y_train"]),
         len(pipeline_data["y_val"]),
         len(pipeline_data["y_test"]),
+        n_sel,
+        n_all,
     )
 
     # ── 3. Exploratory figures ────────────────────────────────────────────────
@@ -115,6 +124,21 @@ def main(data_path: str | None = None) -> None:
             pipeline_data["y_train"],
         ),
         "feature_importances",
+    )
+    _save_figure(
+        plot_lasso_coefficients(
+            pipeline_data["all_feature_names"],
+            pipeline_data["lasso_coef"],
+            pipeline_data["feature_mask"],
+        ),
+        "lasso_feature_selection",
+    )
+    _save_figure(
+        plot_pca_scatter(
+            pipeline_data["X_train_full"],
+            pipeline_data["y_train"],
+        ),
+        "pca_scatter",
     )
 
     # ── 4. Train models ───────────────────────────────────────────────────────
@@ -166,16 +190,18 @@ def main(data_path: str | None = None) -> None:
     predictor = CKDPredictor(
         model=best_model,
         scaler=pipeline_data["scaler"],
-        feature_names=pipeline_data["feature_names"],
+        all_feature_names=pipeline_data["all_feature_names"],
+        feature_mask=pipeline_data["feature_mask"],
         encoders=pipeline_data["encoders"],
         imputer=pipeline_data["imputer"],
     )
     predictor.save()
 
     logger.info("=" * 65)
-    logger.info("  Pipeline complete.  Best model: %s", best_name)
+    logger.info("  Pipeline complete.  Best model (by recall): %s", best_name)
     logger.info(
-        "  Best model metrics (test): acc=%.4f  f1=%.4f  auc=%.4f",
+        "  Best model metrics (test): recall=%.4f  acc=%.4f  f1=%.4f  auc=%.4f",
+        metrics_df.loc[best_name, "recall"],
         metrics_df.loc[best_name, "accuracy"],
         metrics_df.loc[best_name, "f1"],
         metrics_df.loc[best_name, "roc_auc"],

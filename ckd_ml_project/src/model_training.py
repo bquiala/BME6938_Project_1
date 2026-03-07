@@ -3,12 +3,14 @@ model_training.py
 =================
 Train and hyper-parameter-tune four classifiers using GridSearchCV.
 
-Models
-------
-- Logistic Regression  – interpretable baseline
-- Random Forest        – non-linear ensemble, widely used in CKD research
-- Support Vector Machine
-- Gradient Boosting    – XGBoost when available, sklearn GBC as fallback
+Models (per clinical specification)
+------------------------------------
+- Linear SVM (L2 penalty)  – robust baseline for structured clinical data
+- Extra Trees              – fast, low-variance ensemble
+- XGBoost                  – state-of-the-art gradient boosting
+- LightGBM                 – fast gradient boosting on tabular data
+
+CV scoring: Recall (Sensitivity) — minimises clinical false negatives.
 
 The public API is intentionally minimal:
     results = train_models(X_train, y_train, X_val, y_val)
@@ -21,10 +23,10 @@ import time
 from typing import Any, Callable
 
 import numpy as np
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.model_selection import GridSearchCV
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 
 try:
     from xgboost import XGBClassifier
@@ -32,49 +34,110 @@ try:
 except ImportError:
     _XGBOOST_AVAILABLE = False
 
-from src.config import CV_FOLDS, PARAM_GRIDS, RANDOM_STATE, get_logger
+try:
+    from lightgbm import LGBMClassifier
+    _LIGHTGBM_AVAILABLE = True
+except ImportError:
+    _LIGHTGBM_AVAILABLE = False
+
+from src.config import CV_FOLDS, CV_SCORING, PARAM_GRIDS, RANDOM_STATE, get_logger
 
 logger = get_logger(__name__)
 
 
 # ─── Internal helpers ─────────────────────────────────────────────────────────
 
+class _LinearSVCWrapper(BaseEstimator, ClassifierMixin):
+    """
+    Thin wrapper around ``LinearSVC`` that adds ``predict_proba`` via Platt scaling
+    (``CalibratedClassifierCV``) so ROC-AUC and probability outputs work uniformly.
+    Inherits ``BaseEstimator`` + ``ClassifierMixin`` for full scikit-learn compatibility.
+    """
+
+    def __init__(
+        self,
+        C: float = 1.0,
+        penalty: str = "l2",
+        max_iter: int = 2000,
+        random_state: int = 42,
+    ) -> None:
+        self.C = C
+        self.penalty = penalty
+        self.max_iter = max_iter
+        self.random_state = random_state
+
+    def _make_calibrated(self) -> Any:
+        from sklearn.calibration import CalibratedClassifierCV
+        base = LinearSVC(
+            C=self.C,
+            penalty=self.penalty,
+            max_iter=self.max_iter,
+            random_state=self.random_state,
+        )
+        return CalibratedClassifierCV(base, cv=5)
+
+    def fit(self, X: np.ndarray, y: np.ndarray) -> "_LinearSVCWrapper":
+        self._clf = self._make_calibrated()
+        self._clf.fit(X, y)
+        self.classes_ = self._clf.classes_
+        return self
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        return self._clf.predict(X)
+
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        return self._clf.predict_proba(X)
+
+    def score(self, X: np.ndarray, y: np.ndarray) -> float:
+        return self._clf.score(X, y)
+
+
 def _build_estimators() -> dict[str, Any]:
     """
-    Instantiate all baseline estimators with the project's random seed.
+    Instantiate all four clinical-specification estimators with the project's
+    random seed.
 
     Returns
     -------
     dict mapping model name → unfitted estimator
     """
     estimators: dict[str, Any] = {
-        "LogisticRegression": LogisticRegression(
+        # Linear SVM with L2 penalty — Platt-scaled for probability output
+        "LinearSVM": _LinearSVCWrapper(
+            C=1.0,
+            penalty="l2",
+            max_iter=2000,
             random_state=RANDOM_STATE,
-            max_iter=1000,
         ),
-        "RandomForest": RandomForestClassifier(
+        # Extra Trees — fast, low-variance ensemble
+        "ExtraTrees": ExtraTreesClassifier(
             random_state=RANDOM_STATE,
             n_jobs=-1,
         ),
-        "SVM": SVC(
-            random_state=RANDOM_STATE,
-            probability=True,  # needed for predict_proba / ROC-AUC
-        ),
     }
 
+    # XGBoost
     if _XGBOOST_AVAILABLE:
-        estimators["GradientBoosting"] = XGBClassifier(
+        estimators["XGBoost"] = XGBClassifier(
             random_state=RANDOM_STATE,
             eval_metric="logloss",
             n_jobs=-1,
             verbosity=0,
         )
-        logger.info("Using XGBoost for GradientBoosting.")
+        logger.info("XGBoost available — included in model suite.")
     else:
-        estimators["GradientBoosting"] = GradientBoostingClassifier(
+        logger.warning("XGBoost not installed — XGBoost model will be skipped.")
+
+    # LightGBM
+    if _LIGHTGBM_AVAILABLE:
+        estimators["LightGBM"] = LGBMClassifier(
             random_state=RANDOM_STATE,
+            n_jobs=-1,
+            verbose=-1,
         )
-        logger.info("XGBoost not available – using sklearn GradientBoostingClassifier.")
+        logger.info("LightGBM available — included in model suite.")
+    else:
+        logger.warning("LightGBM not installed — LightGBM model will be skipped.")
 
     return estimators
 
@@ -89,22 +152,20 @@ def train_models(
     progress_callback: Callable[[str, int, int], None] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """
-    Train all classifiers with ``GridSearchCV`` hyper-parameter tuning.
+    Train all four classifiers with ``GridSearchCV`` hyper-parameter tuning.
 
-    Each model is fitted on *X_train / y_train*; validation accuracy is
-    reported against *X_val / y_val* (not used for tuning – that uses
-    ``CV_FOLDS``-fold cross-validation internally).
+    Grid search uses ``CV_FOLDS``-fold (10-fold) cross-validation scored on
+    **Recall** (sensitivity) as the primary metric, minimising clinical false
+    negatives.
 
     Parameters
     ----------
     X_train, y_train : np.ndarray
-        Training feature matrix and labels.
+        SMOTE-balanced, LASSO-selected, Z-score-scaled training arrays.
     X_val, y_val : np.ndarray
-        Validation feature matrix and labels (held out from tuning).
+        Validation feature matrix and labels (held out from grid search).
     progress_callback : callable, optional
-        Called after each model finishes training:
         ``progress_callback(model_name, step_index, total_models)``
-        Useful for Streamlit progress bars.
 
     Returns
     -------
@@ -114,7 +175,8 @@ def train_models(
         ``best_estimator``  – fitted estimator with best hyper-parameters
         ``best_params``     – dict of best hyper-parameters
         ``cv_results``      – raw ``GridSearchCV.cv_results_`` dict
-        ``val_score``       – accuracy on the validation split
+        ``val_score``       – recall on the validation split
+        ``val_accuracy``    – accuracy on the validation split
         ``training_time``   – wall-clock seconds
     """
     estimators = _build_estimators()
@@ -125,6 +187,7 @@ def train_models(
         logger.info("[%d/%d] Training %s …", step, total, name)
 
         param_grid = PARAM_GRIDS.get(name, {})
+
         t0 = time.perf_counter()
 
         if param_grid:
@@ -132,7 +195,7 @@ def train_models(
                 estimator=estimator,
                 param_grid=param_grid,
                 cv=CV_FOLDS,
-                scoring="roc_auc",
+                scoring=CV_SCORING,   # recall — sensitivity
                 n_jobs=-1,
                 refit=True,
             )
@@ -146,19 +209,25 @@ def train_models(
             best_params    = {}
             cv_results     = {}
 
-        elapsed   = time.perf_counter() - t0
-        val_score = best_estimator.score(X_val, y_val)
+        elapsed      = time.perf_counter() - t0
+        val_accuracy = best_estimator.score(X_val, y_val)
+
+        # Compute recall on validation split
+        from sklearn.metrics import recall_score
+        y_val_pred = best_estimator.predict(X_val)
+        val_recall = recall_score(y_val, y_val_pred, zero_division=0)
 
         logger.info(
-            "%s — best_params=%s  val_acc=%.4f  elapsed=%.1fs",
-            name, best_params, val_score, elapsed,
+            "%s — best_params=%s  val_recall=%.4f  val_acc=%.4f  elapsed=%.1fs",
+            name, best_params, val_recall, val_accuracy, elapsed,
         )
 
         results[name] = {
             "best_estimator": best_estimator,
             "best_params":    best_params,
             "cv_results":     cv_results,
-            "val_score":      val_score,
+            "val_score":      val_recall,     # primary: recall
+            "val_accuracy":   val_accuracy,
             "training_time":  elapsed,
         }
 
@@ -172,7 +241,10 @@ def select_best_model(
     results: dict[str, dict[str, Any]],
 ) -> tuple[str, Any]:
     """
-    Select the model with the highest validation accuracy.
+    Select the model with the highest validation **Recall** (sensitivity).
+
+    Recall is the primary metric per the clinical specification: minimising
+    false negatives is paramount in CKD screening.
 
     Parameters
     ----------
@@ -182,9 +254,9 @@ def select_best_model(
     Returns
     -------
     (model_name, best_estimator)
-        The name and the fitted estimator of the top-performing model.
     """
-    best_name = max(results, key=lambda k: results[k]["val_score"])
+    best_name  = max(results, key=lambda k: results[k]["val_score"])
     best_score = results[best_name]["val_score"]
-    logger.info("Best model: %s (val_accuracy=%.4f)", best_name, best_score)
+    logger.info("Best model: %s (val_recall=%.4f)", best_name, best_score)
     return best_name, results[best_name]["best_estimator"]
+

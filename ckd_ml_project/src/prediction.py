@@ -4,15 +4,19 @@ prediction.py
 CKD risk prediction utilities.
 
 The ``CKDPredictor`` class wraps a trained sklearn estimator together with
-the preprocessing artefacts (scaler, imputer, encoders) into a single,
-serialisable object.  It accepts raw biomarker values from the UI and returns
-a probability, a binary label, and a risk-level category.
+the preprocessing artefacts (scaler, imputer, encoders, LASSO feature mask)
+into a single, serialisable object.  It accepts raw biomarker values from the
+UI and returns a probability, a binary label, and a risk-level category.
+
+The inference path mirrors the training pipeline exactly:
+    raw inputs → impute (KNN) → Z-score scale → LASSO feature selection → predict
 
 Typical usage
 -------------
->>> predictor = CKDPredictor(model, scaler, feature_names, encoders, imputer)
->>> predictor.save()                        # persist to disk
->>> predictor = CKDPredictor.load()         # reload in a different session
+>>> predictor = CKDPredictor(model, scaler, all_feature_names, feature_mask,
+...                          encoders, imputer)
+>>> predictor.save()
+>>> predictor = CKDPredictor.load()
 >>> result    = predictor.predict({"hemoglobin": 11.0, "albumin": 2.0, ...})
 >>> print(result["probability"], result["label"], result["risk_level"])
 """
@@ -48,8 +52,12 @@ class CKDPredictor:
     ----------
     model : fitted sklearn estimator
     scaler : fitted ``StandardScaler``
+    all_feature_names : list[str]
+        All feature names present after imputation (before LASSO selection).
+    feature_mask : np.ndarray
+        Boolean mask produced by LASSO selection; True = feature used by model.
     feature_names : list[str]
-        Ordered list of feature names the model was trained on.
+        LASSO-selected feature names (aligned with model input).
     encoders : dict[str, LabelEncoder]
         Fitted label encoders for categorical columns.
     imputer : fitted ``KNNImputer``
@@ -59,15 +67,20 @@ class CKDPredictor:
         self,
         model: Any,
         scaler: StandardScaler,
-        feature_names: list[str],
+        all_feature_names: list[str],
+        feature_mask: np.ndarray,
         encoders: dict,
         imputer: KNNImputer,
     ) -> None:
-        self.model         = model
-        self.scaler        = scaler
-        self.feature_names = feature_names
-        self.encoders      = encoders
-        self.imputer       = imputer
+        self.model             = model
+        self.scaler            = scaler
+        self.all_feature_names = all_feature_names
+        self.feature_mask      = feature_mask
+        self.feature_names     = [
+            fn for fn, keep in zip(all_feature_names, feature_mask) if keep
+        ]
+        self.encoders          = encoders
+        self.imputer           = imputer
 
     # ── Serialisation ─────────────────────────────────────────────────────────
 
@@ -119,15 +132,18 @@ class CKDPredictor:
         """
         Predict CKD risk for a single patient from raw biomarker values.
 
-        Missing features default to ``NaN`` and are handled by the fitted
-        imputer — the same one used during training.
+        The inference path mirrors training exactly:
+        raw inputs → KNN impute → Z-score scale → LASSO feature mask → predict
+
+        Missing features default to ``NaN`` and are imputed using the fitted
+        KNNImputer — no special handling required in the UI.
 
         Parameters
         ----------
         inputs : dict
-            Maps feature name (as seen by the model, e.g.
-            ``"hemoglobin"``) to a numeric or encoded value.
-            Any feature not present in *inputs* is treated as missing.
+            Maps feature name (any of ``all_feature_names``) to a numeric or
+            pre-encoded value.  Unknown keys are silently ignored.
+            Missing features are treated as NaN and imputed.
 
         Returns
         -------
@@ -136,21 +152,24 @@ class CKDPredictor:
             ``label``       – ``"CKD"`` or ``"No CKD"``
             ``risk_level``  – ``"High"`` | ``"Moderate"`` | ``"Low"``
         """
-        # Build a single-row DataFrame aligned with the training feature set
-        row = {feature: np.nan for feature in self.feature_names}
-        row.update({k: v for k, v in inputs.items() if k in self.feature_names})
+        # Build a single-row DataFrame aligned to ALL features (pre-LASSO)
+        row = {feature: np.nan for feature in self.all_feature_names}
+        row.update({k: v for k, v in inputs.items() if k in self.all_feature_names})
 
-        X = pd.DataFrame([row])[self.feature_names]
+        X = pd.DataFrame([row])[self.all_feature_names]
         X = X.apply(pd.to_numeric, errors="coerce")
 
-        # Impute missing values with the training imputer
+        # Step 1: KNN impute using the training imputer
         X_imputed = self.imputer.transform(X)
 
-        # Scale with the training scaler
+        # Step 2: Z-score scale with the training scaler
         X_scaled = self.scaler.transform(X_imputed)
 
-        # Predict probability
-        prob = float(self.model.predict_proba(X_scaled)[0, 1])
+        # Step 3: Apply the LASSO feature mask
+        X_selected = X_scaled[:, self.feature_mask]
+
+        # Step 4: Predict probability
+        prob = float(self.model.predict_proba(X_selected)[0, 1])
 
         label = "CKD" if prob >= 0.5 else "No CKD"
 

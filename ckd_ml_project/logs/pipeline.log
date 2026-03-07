@@ -1,0 +1,24 @@
+2026-03-07 21:46:04,501 | INFO     | src.data_loader | Loading ARFF dataset from: <_io.BytesIO object at 0x7445befa5210>
+2026-03-07 21:46:04,517 | INFO     | src.data_loader | Dataset loaded successfully — shape: (160, 25)
+2026-03-07 21:46:05,507 | INFO     | src.preprocess | ─── Preprocessing pipeline start ───
+2026-03-07 21:46:05,508 | INFO     | src.preprocess | Columns after rename: ['age', 'blood_pressure', 'specific_gravity', 'albumin', 'sugar', 'red_blood_cells', 'pus_cell', 'pus_cell_clumps', 'bacteria', 'blood_glucose_random', 'blood_urea', 'serum_creatinine', 'sodium', 'potassium', 'hemoglobin', 'packed_cell_volume', 'white_blood_cell_count', 'red_blood_cell_count', 'hypertension', 'diabetes_mellitus', 'coronary_artery_disease', 'appetite', 'pedal_edema', 'anemia', 'class']
+2026-03-07 21:46:05,526 | INFO     | src.preprocess | No features exceeded the 20% missing threshold.
+2026-03-07 21:46:05,668 | INFO     | src.preprocess | Running KNN imputation (k=5) on 24 features …
+2026-03-07 21:46:05,676 | INFO     | src.preprocess | Splitting dataset — train: 70%, val: 15%, test: 15% (n=160)
+2026-03-07 21:46:05,680 | INFO     | src.preprocess | Split sizes — train: 112, val: 24, test: 24
+2026-03-07 21:46:05,682 | INFO     | src.preprocess | Applying StandardScaler (fit on train only) …
+2026-03-07 21:46:05,683 | INFO     | src.preprocess | ─── Preprocessing pipeline complete ───
+2026-03-07 21:46:05,850 | INFO     | src.model_training | Using XGBoost for GradientBoosting.
+2026-03-07 21:46:05,851 | INFO     | src.model_training | [1/4] Training LogisticRegression …
+2026-03-07 21:46:09,430 | INFO     | src.model_training | LogisticRegression — best_params={'C': 1, 'max_iter': 200, 'solver': 'lbfgs'}  val_acc=1.0000  elapsed=3.6s
+2026-03-07 21:46:09,433 | INFO     | src.model_training | [2/4] Training RandomForest …
+2026-03-07 21:46:09,711 | INFO     | src.model_training | RandomForest — best_params={'n_estimators': 10}  val_acc=1.0000  elapsed=0.3s
+2026-03-07 21:46:09,712 | INFO     | src.model_training | [3/4] Training SVM …
+2026-03-07 21:46:09,756 | INFO     | src.model_training | SVM — best_params={'C': 1, 'gamma': 'scale', 'kernel': 'rbf'}  val_acc=1.0000  elapsed=0.0s
+2026-03-07 21:46:09,757 | INFO     | src.model_training | [4/4] Training GradientBoosting …
+2026-03-07 21:46:09,900 | INFO     | src.model_training | GradientBoosting — best_params={'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 10}  val_acc=1.0000  elapsed=0.1s
+2026-03-07 21:46:09,902 | INFO     | src.model_training | Best model: LogisticRegression (val_accuracy=1.0000)
+2026-03-07 21:46:10,348 | INFO     | src.evaluation | [LogisticRegression] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-07 21:46:10,380 | INFO     | src.evaluation | [RandomForest] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-07 21:46:10,386 | INFO     | src.evaluation | [SVM] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-07 21:46:10,394 | INFO     | src.evaluation | [GradientBoosting] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000

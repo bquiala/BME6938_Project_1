@@ -76,6 +76,7 @@ streamlit run app/app.py
 
 Then open **http://localhost:8501** in your browser.
 
+
 **Computational requirements:** any modern CPU; no GPU required.
 8 GB RAM recommended for the full GridSearchCV grid.
 

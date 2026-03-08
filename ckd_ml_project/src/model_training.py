@@ -92,6 +92,33 @@ class _LinearSVCWrapper(BaseEstimator, ClassifierMixin):
         return self._clf.score(X, y)
 
 
+class _LGBMWrapper(LGBMClassifier):
+    """
+    Subclass of ``LGBMClassifier`` that suppresses the spurious sklearn
+    UserWarning "X does not have valid feature names, but LGBMClassifier was
+    fitted with feature names".
+
+    Root cause: LightGBM's sklearn interface stores auto-generated column names
+    (``Column_0``, ``Column_1``, …) even when the model is fitted on a plain
+    numpy array.  It exposes those names via a ``feature_names_in_`` property,
+    and sklearn's ``_check_feature_names`` warns on every ``predict`` / scoring
+    call when the incoming array also lacks named columns.
+
+    Fix: override ``feature_names_in_`` so its getter raises ``AttributeError``.
+    Because Python's ``hasattr`` catches ``AttributeError``, sklearn's check
+    sees no feature names on this estimator and stays silent — with zero impact
+    on model accuracy or behaviour.
+    """
+
+    @property  # type: ignore[override]
+    def feature_names_in_(self):  # noqa: D102
+        raise AttributeError("feature_names_in_")
+
+    @feature_names_in_.setter
+    def feature_names_in_(self, value) -> None:  # noqa: D102
+        pass  # silently discard; LightGBM's internal feature_name_ is enough
+
+
 def _build_estimators() -> dict[str, Any]:
     """
     Instantiate all four clinical-specification estimators with the project's
@@ -130,7 +157,7 @@ def _build_estimators() -> dict[str, Any]:
 
     # LightGBM
     if _LIGHTGBM_AVAILABLE:
-        estimators["LightGBM"] = LGBMClassifier(
+        estimators["LightGBM"] = _LGBMWrapper(
             random_state=RANDOM_STATE,
             n_jobs=-1,
             verbose=-1,

@@ -41,58 +41,32 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ─── Custom CSS – light / minimal aesthetic ───────────────────────────────────
+# ─── Custom CSS – utility classes only ───────────────────────────────────────
 st.markdown(
     """
     <style>
-    /* ── Base ── */
-    .stApp { background-color: #F8F8F8; }
-    section[data-testid="stSidebar"] {
-        background-color: #FFFFFF;
-        border-right: 1px solid #E4E4E4;
-    }
-
     /* ── Metric card ── */
     .metric-card {
-        background: #FFFFFF;
         border-radius: 12px;
         padding: 1.2rem 1.4rem;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         text-align: center;
         margin-bottom: 0.4rem;
+        border: 1px solid rgba(128,128,128,0.2);
     }
     .metric-card h3 {
         font-size: 0.78rem;
-        color: #999;
         margin: 0 0 0.35rem;
         text-transform: uppercase;
         letter-spacing: .06em;
+        opacity: 0.7;
     }
-    .metric-card p { font-size: 1.75rem; font-weight: 700; color: #333; margin: 0; }
+    .metric-card p { font-size: 1.75rem; font-weight: 700; margin: 0; }
 
     /* ── Risk badges ── */
     .risk-high     { color: #C0392B; font-weight: 700; font-size: 1.4rem; }
     .risk-moderate { color: #D35400; font-weight: 700; font-size: 1.4rem; }
     .risk-low      { color: #27AE60; font-weight: 700; font-size: 1.4rem; }
-
-    /* ── Primary button ── */
-    div.stButton > button {
-        background: #E8A0B0;
-        color: #333;
-        border: none;
-        border-radius: 8px;
-        padding: 0.55rem 1.8rem;
-        font-weight: 600;
-        font-size: 0.95rem;
-        transition: background 0.2s;
-    }
-    div.stButton > button:hover { background: #D4849A; color: #fff; }
-
-    /* ── Tabs ── */
-    button[data-baseweb="tab"] {
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
     </style>
     """,
     unsafe_allow_html=True,

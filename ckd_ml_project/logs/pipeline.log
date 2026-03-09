@@ -456,3 +456,376 @@
 2026-03-08 23:30:47,513 | INFO     | src.prediction | Loading CKDPredictor from /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
 2026-03-08 23:34:58,740 | INFO     | src.prediction | Loading CKDPredictor from /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
 2026-03-08 23:38:23,201 | INFO     | src.prediction | Loading CKDPredictor from /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:12:11,089 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:12:11,092 | INFO     | run_pipeline |   CKD Machine Learning Pipeline  —  Start
+2026-03-09 02:12:11,093 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:12:11,093 | INFO     | run_pipeline | Step 1/7  Loading dataset …
+2026-03-09 02:12:11,093 | INFO     | src.data_loader | Found ARFF file: /workspaces/BME6938_Project_1/ckd_ml_project/data/dataset.arff
+2026-03-09 02:12:11,093 | INFO     | src.data_loader | Loading ARFF dataset from: /workspaces/BME6938_Project_1/ckd_ml_project/data/dataset.arff
+2026-03-09 02:12:11,184 | INFO     | src.data_loader | Dataset loaded successfully — shape: (400, 26)
+2026-03-09 02:12:11,184 | INFO     | run_pipeline | Raw dataset shape: (400, 26)
+2026-03-09 02:12:11,184 | INFO     | run_pipeline | Step 2/7  Preprocessing …
+2026-03-09 02:12:11,186 | INFO     | src.preprocess | ─── Preprocessing pipeline start ───
+2026-03-09 02:12:11,187 | INFO     | src.preprocess | Columns after rename: ['id', 'age', 'blood_pressure', 'specific_gravity', 'albumin', 'sugar', 'red_blood_cells', 'pus_cell', 'pus_cell_clumps', 'bacteria', 'blood_glucose_random', 'blood_urea', 'serum_creatinine', 'sodium', 'potassium', 'hemoglobin', 'packed_cell_volume', 'white_blood_cell_count', 'red_blood_cell_count', 'hypertension', 'diabetes_mellitus', 'coronary_artery_disease', 'appetite', 'pedal_edema', 'anemia', 'class']
+2026-03-09 02:12:11,193 | INFO     | src.preprocess | Dropping 5 feature(s) with >20% missing: ['red_blood_cells', 'sodium', 'potassium', 'white_blood_cell_count', 'red_blood_cell_count']
+2026-03-09 02:12:11,411 | INFO     | src.preprocess | Running KNN imputation (k=5) on 20 features …
+2026-03-09 02:12:11,450 | INFO     | src.preprocess | Splitting dataset — train: 70%, val: 15%, test: 15% (n=400)
+2026-03-09 02:12:11,453 | INFO     | src.preprocess | Split sizes — train: 280, val: 60, test: 60
+2026-03-09 02:12:11,454 | INFO     | src.preprocess | Applying Z-score StandardScaler (fit on train only) …
+2026-03-09 02:12:11,456 | INFO     | src.preprocess | Applying SMOTE to training set (before: 280 samples, classes: {np.int64(0): np.int64(105), np.int64(1): np.int64(175)}) …
+2026-03-09 02:12:11,696 | INFO     | src.preprocess | After SMOTE: 350 samples, classes: {np.int64(0): np.int64(175), np.int64(1): np.int64(175)}
+2026-03-09 02:12:11,697 | INFO     | src.preprocess | Running LASSO (L1) feature selection (C=0.100) …
+2026-03-09 02:12:11,703 | INFO     | src.preprocess | LASSO selected 8 / 20 features: ['id', 'specific_gravity', 'albumin', 'blood_glucose_random', 'hemoglobin', 'packed_cell_volume', 'hypertension', 'diabetes_mellitus']
+2026-03-09 02:12:11,704 | INFO     | src.preprocess | ─── Preprocessing pipeline complete ───
+2026-03-09 02:12:11,704 | INFO     | run_pipeline | Train: 350  |  Val: 60  |  Test: 60  |  LASSO features: 8 / 20
+2026-03-09 02:12:11,705 | INFO     | run_pipeline | Step 3/7  Generating exploratory figures …
+2026-03-09 02:12:11,705 | INFO     | src.feature_analysis | Plotting class distribution …
+2026-03-09 02:12:12,279 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/class_distribution.png
+2026-03-09 02:12:12,279 | INFO     | src.feature_analysis | Generating correlation heatmap …
+2026-03-09 02:12:13,035 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/correlation_heatmap.png
+2026-03-09 02:12:13,036 | INFO     | src.feature_analysis | Computing feature importances (top 15) …
+2026-03-09 02:12:13,519 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/feature_importances.png
+2026-03-09 02:12:13,519 | INFO     | src.feature_analysis | Plotting LASSO coefficient magnitudes …
+2026-03-09 02:12:13,856 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/lasso_feature_selection.png
+2026-03-09 02:12:13,856 | INFO     | src.feature_analysis | Computing PCA (2 components) …
+2026-03-09 02:12:14,402 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/pca_scatter.png
+2026-03-09 02:12:14,402 | INFO     | run_pipeline | Step 4/7  Training models with GridSearchCV …
+2026-03-09 02:12:14,402 | INFO     | src.model_training | XGBoost available — included in model suite.
+2026-03-09 02:12:14,402 | INFO     | src.model_training | LightGBM available — included in model suite.
+2026-03-09 02:12:14,403 | INFO     | src.model_training | [1/4] Training LinearSVM …
+2026-03-09 02:12:19,147 | INFO     | src.model_training | LinearSVM — best_params={'C': 0.01}  val_recall=0.9737  val_acc=0.9833  elapsed=4.7s
+2026-03-09 02:12:19,147 | INFO     | src.model_training | [2/4] Training ExtraTrees …
+2026-03-09 02:13:06,665 | INFO     | src.model_training | ExtraTrees — best_params={'max_depth': None, 'min_samples_split': 2, 'n_estimators': 100}  val_recall=1.0000  val_acc=1.0000  elapsed=47.5s
+2026-03-09 02:13:06,665 | INFO     | src.model_training | [3/4] Training XGBoost …
+2026-03-09 02:13:10,396 | INFO     | src.model_training | XGBoost — best_params={'learning_rate': 0.05, 'max_depth': 3, 'n_estimators': 100}  val_recall=1.0000  val_acc=1.0000  elapsed=3.7s
+2026-03-09 02:13:10,398 | INFO     | src.model_training | [4/4] Training LightGBM …
+2026-03-09 02:13:26,234 | INFO     | src.model_training | LightGBM — best_params={'learning_rate': 0.05, 'max_depth': -1, 'n_estimators': 100, 'num_leaves': 31}  val_recall=1.0000  val_acc=1.0000  elapsed=15.8s
+2026-03-09 02:13:26,235 | INFO     | run_pipeline | Step 5/7  Evaluating on held-out test set …
+2026-03-09 02:13:26,248 | INFO     | src.evaluation | [LinearSVM] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:13:26,299 | INFO     | src.evaluation | [ExtraTrees] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:13:26,307 | INFO     | src.evaluation | [XGBoost] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:13:26,329 | INFO     | src.evaluation | [LightGBM] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:13:26,334 | INFO     | run_pipeline | Step 6/7  Generating evaluation figures …
+2026-03-09 02:13:26,334 | INFO     | src.evaluation | Generating ROC curves …
+2026-03-09 02:13:26,573 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/roc_curves.png
+2026-03-09 02:13:26,573 | INFO     | src.model_training | Best model: ExtraTrees (val_recall=1.0000)
+2026-03-09 02:13:26,573 | INFO     | src.evaluation | Generating confusion matrix for ExtraTrees …
+2026-03-09 02:13:26,750 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/confusion_matrix_best.png
+2026-03-09 02:13:26,750 | INFO     | run_pipeline | Step 7/7  Saving model artefact …
+2026-03-09 02:13:26,855 | INFO     | src.prediction | CKDPredictor saved → /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:13:26,855 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:13:26,855 | INFO     | run_pipeline |   Pipeline complete.  Best model (by recall): ExtraTrees
+2026-03-09 02:13:26,855 | INFO     | run_pipeline |   Best model metrics (test): recall=1.0000  acc=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:13:26,855 | INFO     | run_pipeline |   Figures saved to : /workspaces/BME6938_Project_1/ckd_ml_project/logs
+2026-03-09 02:13:26,856 | INFO     | run_pipeline |   Model artefact   : /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:13:26,856 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:13:26,856 | INFO     | run_pipeline |   Launch the Streamlit app with:
+2026-03-09 02:13:26,856 | INFO     | run_pipeline |       streamlit run app/app.py
+2026-03-09 02:13:26,856 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:13:30,474 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:13:30,474 | INFO     | run_pipeline |   CKD Machine Learning Pipeline  —  Start
+2026-03-09 02:13:30,474 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:13:30,475 | INFO     | run_pipeline | Step 1/7  Loading dataset …
+2026-03-09 02:13:30,475 | INFO     | src.data_loader | Found ARFF file: /workspaces/BME6938_Project_1/ckd_ml_project/data/dataset.arff
+2026-03-09 02:13:30,475 | INFO     | src.data_loader | Loading ARFF dataset from: /workspaces/BME6938_Project_1/ckd_ml_project/data/dataset.arff
+2026-03-09 02:13:30,491 | INFO     | src.data_loader | Dataset loaded successfully — shape: (400, 26)
+2026-03-09 02:13:30,491 | INFO     | run_pipeline | Raw dataset shape: (400, 26)
+2026-03-09 02:13:30,492 | INFO     | run_pipeline | Step 2/7  Preprocessing …
+2026-03-09 02:13:30,492 | INFO     | src.preprocess | ─── Preprocessing pipeline start ───
+2026-03-09 02:13:30,492 | INFO     | src.preprocess | Columns after rename: ['id', 'age', 'blood_pressure', 'specific_gravity', 'albumin', 'sugar', 'red_blood_cells', 'pus_cell', 'pus_cell_clumps', 'bacteria', 'blood_glucose_random', 'blood_urea', 'serum_creatinine', 'sodium', 'potassium', 'hemoglobin', 'packed_cell_volume', 'white_blood_cell_count', 'red_blood_cell_count', 'hypertension', 'diabetes_mellitus', 'coronary_artery_disease', 'appetite', 'pedal_edema', 'anemia', 'class']
+2026-03-09 02:13:30,497 | INFO     | src.preprocess | Dropping 5 feature(s) with >20% missing: ['red_blood_cells', 'sodium', 'potassium', 'white_blood_cell_count', 'red_blood_cell_count']
+2026-03-09 02:13:30,672 | INFO     | src.preprocess | Running KNN imputation (k=5) on 20 features …
+2026-03-09 02:13:30,690 | INFO     | src.preprocess | Splitting dataset — train: 70%, val: 15%, test: 15% (n=400)
+2026-03-09 02:13:30,692 | INFO     | src.preprocess | Split sizes — train: 280, val: 60, test: 60
+2026-03-09 02:13:30,692 | INFO     | src.preprocess | Applying Z-score StandardScaler (fit on train only) …
+2026-03-09 02:13:30,694 | INFO     | src.preprocess | Applying SMOTE to training set (before: 280 samples, classes: {np.int64(0): np.int64(105), np.int64(1): np.int64(175)}) …
+2026-03-09 02:13:30,744 | INFO     | src.preprocess | After SMOTE: 350 samples, classes: {np.int64(0): np.int64(175), np.int64(1): np.int64(175)}
+2026-03-09 02:13:30,745 | INFO     | src.preprocess | Running LASSO (L1) feature selection (C=0.100) …
+2026-03-09 02:13:30,752 | INFO     | src.preprocess | LASSO selected 8 / 20 features: ['id', 'specific_gravity', 'albumin', 'blood_glucose_random', 'hemoglobin', 'packed_cell_volume', 'hypertension', 'diabetes_mellitus']
+2026-03-09 02:13:30,753 | INFO     | src.preprocess | ─── Preprocessing pipeline complete ───
+2026-03-09 02:13:30,753 | INFO     | run_pipeline | Train: 350  |  Val: 60  |  Test: 60  |  LASSO features: 8 / 20
+2026-03-09 02:13:30,754 | INFO     | run_pipeline | Step 3/7  Generating exploratory figures …
+2026-03-09 02:13:30,754 | INFO     | src.feature_analysis | Plotting class distribution …
+2026-03-09 02:13:30,974 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/class_distribution.png
+2026-03-09 02:13:30,974 | INFO     | src.feature_analysis | Generating correlation heatmap …
+2026-03-09 02:13:31,820 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/correlation_heatmap.png
+2026-03-09 02:13:31,820 | INFO     | src.feature_analysis | Computing feature importances (top 15) …
+2026-03-09 02:13:32,188 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/feature_importances.png
+2026-03-09 02:13:32,188 | INFO     | src.feature_analysis | Plotting LASSO coefficient magnitudes …
+2026-03-09 02:13:32,481 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/lasso_feature_selection.png
+2026-03-09 02:13:32,481 | INFO     | src.feature_analysis | Computing PCA (2 components) …
+2026-03-09 02:13:32,680 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/pca_scatter.png
+2026-03-09 02:13:32,680 | INFO     | run_pipeline | Step 4/7  Training models with GridSearchCV …
+2026-03-09 02:13:32,680 | INFO     | src.model_training | XGBoost available — included in model suite.
+2026-03-09 02:13:32,681 | INFO     | src.model_training | LightGBM available — included in model suite.
+2026-03-09 02:13:32,681 | INFO     | src.model_training | [1/4] Training LinearSVM …
+2026-03-09 02:13:36,967 | INFO     | src.model_training | LinearSVM — best_params={'C': 0.01}  val_recall=0.9737  val_acc=0.9833  elapsed=4.3s
+2026-03-09 02:13:36,967 | INFO     | src.model_training | [2/4] Training ExtraTrees …
+2026-03-09 02:14:24,042 | INFO     | src.model_training | ExtraTrees — best_params={'max_depth': None, 'min_samples_split': 2, 'n_estimators': 100}  val_recall=1.0000  val_acc=1.0000  elapsed=47.0s
+2026-03-09 02:14:24,042 | INFO     | src.model_training | [3/4] Training XGBoost …
+2026-03-09 02:14:27,066 | INFO     | src.model_training | XGBoost — best_params={'learning_rate': 0.05, 'max_depth': 3, 'n_estimators': 100}  val_recall=1.0000  val_acc=1.0000  elapsed=3.0s
+2026-03-09 02:14:27,067 | INFO     | src.model_training | [4/4] Training LightGBM …
+2026-03-09 02:14:46,626 | INFO     | src.model_training | LightGBM — best_params={'learning_rate': 0.05, 'max_depth': -1, 'n_estimators': 100, 'num_leaves': 31}  val_recall=1.0000  val_acc=1.0000  elapsed=19.6s
+2026-03-09 02:14:46,627 | INFO     | run_pipeline | Step 5/7  Evaluating on held-out test set …
+2026-03-09 02:14:46,640 | INFO     | src.evaluation | [LinearSVM] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:14:46,695 | INFO     | src.evaluation | [ExtraTrees] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:14:46,709 | INFO     | src.evaluation | [XGBoost] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:14:46,725 | INFO     | src.evaluation | [LightGBM] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:14:46,729 | INFO     | run_pipeline | Step 6/7  Generating evaluation figures …
+2026-03-09 02:14:46,729 | INFO     | src.evaluation | Generating ROC curves …
+2026-03-09 02:14:47,006 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/roc_curves.png
+2026-03-09 02:14:47,006 | INFO     | src.model_training | Best model: ExtraTrees (val_recall=1.0000)
+2026-03-09 02:14:47,006 | INFO     | src.evaluation | Generating confusion matrix for ExtraTrees …
+2026-03-09 02:14:47,209 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/confusion_matrix_best.png
+2026-03-09 02:14:47,209 | INFO     | run_pipeline | Step 7/7  Saving model artefact …
+2026-03-09 02:14:47,245 | INFO     | src.prediction | CKDPredictor saved → /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:14:47,245 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:14:47,245 | INFO     | run_pipeline |   Pipeline complete.  Best model (by recall): ExtraTrees
+2026-03-09 02:14:47,246 | INFO     | run_pipeline |   Best model metrics (test): recall=1.0000  acc=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:14:47,246 | INFO     | run_pipeline |   Figures saved to : /workspaces/BME6938_Project_1/ckd_ml_project/logs
+2026-03-09 02:14:47,246 | INFO     | run_pipeline |   Model artefact   : /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:14:47,246 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:14:47,246 | INFO     | run_pipeline |   Launch the Streamlit app with:
+2026-03-09 02:14:47,246 | INFO     | run_pipeline |       streamlit run app/app.py
+2026-03-09 02:14:47,246 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:15:09,112 | INFO     | src.prediction | Loading CKDPredictor from /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:15:43,725 | INFO     | src.data_loader | Loading ARFF dataset from: UploadedFile(file_id='610ae99a-f678-40ad-b62d-092005ba0510', name='dataset.arff', type='application/octet-stream', size=50102, _file_urls=file_id: "610ae99a-f678-40ad-b62d-092005ba0510"
+upload_url: "/_stcore/upload_file/717d62b3-842f-4536-87ef-d7ce7f9a5d54/610ae99a-f678-40ad-b62d-092005ba0510"
+delete_url: "/_stcore/upload_file/717d62b3-842f-4536-87ef-d7ce7f9a5d54/610ae99a-f678-40ad-b62d-092005ba0510"
+)
+2026-03-09 02:15:43,728 | ERROR    | src.data_loader | Failed to load ARFF file: String attributes not supported yet, sorry
+2026-03-09 02:20:20,999 | INFO     | src.data_loader | Loading ARFF dataset from: <_io.BytesIO object at 0x71be2717e8e0>
+2026-03-09 02:20:21,000 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'id' (column 0).
+2026-03-09 02:20:21,000 | WARNING  | src.data_loader | The following STRING attributes were removed before parsing (scipy does not support them): ['id']
+2026-03-09 02:20:21,002 | INFO     | src.data_loader | Dataset loaded successfully — shape: (2, 2)
+2026-03-09 02:25:14,456 | INFO     | src.prediction | Loading CKDPredictor from /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:25:23,926 | INFO     | src.data_loader | Loading ARFF dataset from: UploadedFile(file_id='2598170c-50e8-46fd-bf77-d8c40f0aabdf', name='dataset.arff', type='application/octet-stream', size=50102, _file_urls=file_id: "2598170c-50e8-46fd-bf77-d8c40f0aabdf"
+upload_url: "/_stcore/upload_file/678fbb3b-867c-446d-86d6-52418ef3b773/2598170c-50e8-46fd-bf77-d8c40f0aabdf"
+delete_url: "/_stcore/upload_file/678fbb3b-867c-446d-86d6-52418ef3b773/2598170c-50e8-46fd-bf77-d8c40f0aabdf"
+)
+2026-03-09 02:25:23,929 | ERROR    | src.data_loader | Failed to load ARFF file: String attributes not supported yet, sorry
+2026-03-09 02:28:46,176 | INFO     | src.data_loader | Loading ARFF dataset from: <_io.BytesIO object at 0x7c62f46453f0>
+2026-03-09 02:28:46,176 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'id' (column 0).
+2026-03-09 02:28:46,176 | WARNING  | src.data_loader | The following STRING attributes were removed before parsing (scipy does not support them): ['id']
+2026-03-09 02:28:46,179 | INFO     | src.data_loader | Dataset loaded successfully — shape: (2, 2)
+2026-03-09 02:28:46,180 | INFO     | src.data_loader | Loading ARFF dataset from: <_io.BytesIO object at 0x7c62f46453f0>
+2026-03-09 02:28:46,180 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'patient id' (column 0).
+2026-03-09 02:28:46,180 | WARNING  | src.data_loader | The following STRING attributes were removed before parsing (scipy does not support them): ['patient id']
+2026-03-09 02:28:46,181 | INFO     | src.data_loader | Dataset loaded successfully — shape: (2, 2)
+2026-03-09 02:28:46,181 | INFO     | src.data_loader | Loading ARFF dataset from: <_io.BytesIO object at 0x7c62dcf3f010>
+2026-03-09 02:28:46,182 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'patient id' (column 0).
+2026-03-09 02:28:46,182 | WARNING  | src.data_loader | The following STRING attributes were removed before parsing (scipy does not support them): ['patient id']
+2026-03-09 02:28:46,183 | INFO     | src.data_loader | Dataset loaded successfully — shape: (2, 2)
+2026-03-09 02:28:46,184 | INFO     | src.data_loader | Loading ARFF dataset from: <_io.BytesIO object at 0x7c62dcf3ee30>
+2026-03-09 02:28:46,184 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'notes' (column 0).
+2026-03-09 02:28:46,184 | WARNING  | src.data_loader | The following STRING attributes were removed before parsing (scipy does not support them): ['notes']
+2026-03-09 02:28:46,185 | INFO     | src.data_loader | Dataset loaded successfully — shape: (2, 2)
+2026-03-09 02:28:46,185 | INFO     | src.data_loader | Loading ARFF dataset from: <_io.BytesIO object at 0x7c62f46453f0>
+2026-03-09 02:28:46,185 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'notes' (column 0).
+2026-03-09 02:28:46,186 | WARNING  | src.data_loader | The following STRING attributes were removed before parsing (scipy does not support them): ['notes']
+2026-03-09 02:28:46,187 | INFO     | src.data_loader | Dataset loaded successfully — shape: (2, 2)
+2026-03-09 02:28:46,187 | INFO     | src.data_loader | Loading ARFF dataset from: <_io.BytesIO object at 0x7c62dcf3f010>
+2026-03-09 02:28:46,187 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'id' (column 0).
+2026-03-09 02:28:46,187 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'notes' (column 1).
+2026-03-09 02:28:46,187 | WARNING  | src.data_loader | The following STRING attributes were removed before parsing (scipy does not support them): ['id', 'notes']
+2026-03-09 02:28:46,188 | INFO     | src.data_loader | Dataset loaded successfully — shape: (2, 2)
+2026-03-09 02:28:46,189 | INFO     | src.data_loader | Loading ARFF dataset from: <_io.BytesIO object at 0x7c62dcf3ee30>
+2026-03-09 02:28:46,190 | INFO     | src.data_loader | Dataset loaded successfully — shape: (2, 2)
+2026-03-09 02:40:02,893 | INFO     | src.prediction | Loading CKDPredictor from /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:40:09,044 | INFO     | src.data_loader | Loading ARFF dataset from: UploadedFile(file_id='dc73c2b2-c7f4-4f04-b0c2-32bff6fc7f65', name='dataset.arff', type='application/octet-stream', size=50102, _file_urls=file_id: "dc73c2b2-c7f4-4f04-b0c2-32bff6fc7f65"
+upload_url: "/_stcore/upload_file/1849e637-c409-4e59-af2d-22478852d63c/dc73c2b2-c7f4-4f04-b0c2-32bff6fc7f65"
+delete_url: "/_stcore/upload_file/1849e637-c409-4e59-af2d-22478852d63c/dc73c2b2-c7f4-4f04-b0c2-32bff6fc7f65"
+)
+2026-03-09 02:40:09,047 | ERROR    | src.data_loader | Failed to load ARFF file: String attributes not supported yet, sorry
+2026-03-09 02:40:45,336 | INFO     | src.prediction | Loading CKDPredictor from /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:40:52,396 | INFO     | src.data_loader | Loading ARFF dataset from: UploadedFile(file_id='e59d6248-de3f-4b76-873e-ed592f83786f', name='dataset.arff', type='application/octet-stream', size=50102, _file_urls=file_id: "e59d6248-de3f-4b76-873e-ed592f83786f"
+upload_url: "/_stcore/upload_file/501bceb4-d270-43b6-8bf6-3efaf1e2fc6c/e59d6248-de3f-4b76-873e-ed592f83786f"
+delete_url: "/_stcore/upload_file/501bceb4-d270-43b6-8bf6-3efaf1e2fc6c/e59d6248-de3f-4b76-873e-ed592f83786f"
+)
+2026-03-09 02:40:52,399 | ERROR    | src.data_loader | Failed to load ARFF file: String attributes not supported yet, sorry
+2026-03-09 02:43:04,492 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:43:04,492 | INFO     | run_pipeline |   CKD Machine Learning Pipeline  —  Start
+2026-03-09 02:43:04,492 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:43:04,492 | INFO     | run_pipeline | Step 1/7  Loading dataset …
+2026-03-09 02:43:04,493 | INFO     | src.data_loader | Found ARFF file: /workspaces/BME6938_Project_1/ckd_ml_project/data/dataset.arff
+2026-03-09 02:43:04,493 | INFO     | src.data_loader | Loading ARFF dataset from: /workspaces/BME6938_Project_1/ckd_ml_project/data/dataset.arff
+2026-03-09 02:43:04,520 | INFO     | src.data_loader | Dataset loaded successfully — shape: (400, 26)
+2026-03-09 02:43:04,520 | INFO     | run_pipeline | Raw dataset shape: (400, 26)
+2026-03-09 02:43:04,520 | INFO     | run_pipeline | Step 2/7  Preprocessing …
+2026-03-09 02:43:04,520 | INFO     | src.preprocess | ─── Preprocessing pipeline start ───
+2026-03-09 02:43:04,521 | INFO     | src.preprocess | Columns after rename: ['id', 'age', 'blood_pressure', 'specific_gravity', 'albumin', 'sugar', 'red_blood_cells', 'pus_cell', 'pus_cell_clumps', 'bacteria', 'blood_glucose_random', 'blood_urea', 'serum_creatinine', 'sodium', 'potassium', 'hemoglobin', 'packed_cell_volume', 'white_blood_cell_count', 'red_blood_cell_count', 'hypertension', 'diabetes_mellitus', 'coronary_artery_disease', 'appetite', 'pedal_edema', 'anemia', 'class']
+2026-03-09 02:43:04,525 | INFO     | src.preprocess | Dropping 5 feature(s) with >20% missing: ['red_blood_cells', 'sodium', 'potassium', 'white_blood_cell_count', 'red_blood_cell_count']
+2026-03-09 02:43:04,698 | INFO     | src.preprocess | Running KNN imputation (k=5) on 20 features …
+2026-03-09 02:43:04,716 | INFO     | src.preprocess | Splitting dataset — train: 70%, val: 15%, test: 15% (n=400)
+2026-03-09 02:43:04,718 | INFO     | src.preprocess | Split sizes — train: 280, val: 60, test: 60
+2026-03-09 02:43:04,718 | INFO     | src.preprocess | Applying Z-score StandardScaler (fit on train only) …
+2026-03-09 02:43:04,719 | INFO     | src.preprocess | Applying SMOTE to training set (before: 280 samples, classes: {np.int64(0): np.int64(105), np.int64(1): np.int64(175)}) …
+2026-03-09 02:43:04,777 | INFO     | src.preprocess | After SMOTE: 350 samples, classes: {np.int64(0): np.int64(175), np.int64(1): np.int64(175)}
+2026-03-09 02:43:04,777 | INFO     | src.preprocess | Running LASSO (L1) feature selection (C=0.100) …
+2026-03-09 02:43:04,785 | INFO     | src.preprocess | LASSO selected 8 / 20 features: ['id', 'specific_gravity', 'albumin', 'blood_glucose_random', 'hemoglobin', 'packed_cell_volume', 'hypertension', 'diabetes_mellitus']
+2026-03-09 02:43:04,785 | INFO     | src.preprocess | ─── Preprocessing pipeline complete ───
+2026-03-09 02:43:04,786 | INFO     | run_pipeline | Train: 350  |  Val: 60  |  Test: 60  |  LASSO features: 8 / 20
+2026-03-09 02:43:04,786 | INFO     | run_pipeline | Step 3/7  Generating exploratory figures …
+2026-03-09 02:43:04,786 | INFO     | src.feature_analysis | Plotting class distribution …
+2026-03-09 02:43:04,985 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/class_distribution.png
+2026-03-09 02:43:04,986 | INFO     | src.feature_analysis | Generating correlation heatmap …
+2026-03-09 02:43:05,819 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/correlation_heatmap.png
+2026-03-09 02:43:05,819 | INFO     | src.feature_analysis | Computing feature importances (top 15) …
+2026-03-09 02:43:06,185 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/feature_importances.png
+2026-03-09 02:43:06,185 | INFO     | src.feature_analysis | Plotting LASSO coefficient magnitudes …
+2026-03-09 02:43:06,439 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/lasso_feature_selection.png
+2026-03-09 02:43:06,439 | INFO     | src.feature_analysis | Computing PCA (2 components) …
+2026-03-09 02:43:06,662 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/pca_scatter.png
+2026-03-09 02:43:06,662 | INFO     | run_pipeline | Step 4/7  Training models with GridSearchCV …
+2026-03-09 02:43:06,662 | INFO     | src.model_training | XGBoost available — included in model suite.
+2026-03-09 02:43:06,662 | INFO     | src.model_training | LightGBM available — included in model suite.
+2026-03-09 02:43:06,662 | INFO     | src.model_training | [1/4] Training LinearSVM …
+2026-03-09 02:43:11,184 | INFO     | src.model_training | LinearSVM — best_params={'C': 0.01}  val_recall=0.9737  val_acc=0.9833  elapsed=4.5s
+2026-03-09 02:43:11,185 | INFO     | src.model_training | [2/4] Training ExtraTrees …
+2026-03-09 02:43:58,845 | INFO     | src.model_training | ExtraTrees — best_params={'max_depth': None, 'min_samples_split': 2, 'n_estimators': 100}  val_recall=1.0000  val_acc=1.0000  elapsed=47.6s
+2026-03-09 02:43:58,846 | INFO     | src.model_training | [3/4] Training XGBoost …
+2026-03-09 02:44:02,318 | INFO     | src.model_training | XGBoost — best_params={'learning_rate': 0.05, 'max_depth': 3, 'n_estimators': 100}  val_recall=1.0000  val_acc=1.0000  elapsed=3.5s
+2026-03-09 02:44:02,318 | INFO     | src.model_training | [4/4] Training LightGBM …
+2026-03-09 02:44:32,980 | INFO     | src.model_training | LightGBM — best_params={'learning_rate': 0.05, 'max_depth': -1, 'n_estimators': 100, 'num_leaves': 31}  val_recall=1.0000  val_acc=1.0000  elapsed=30.7s
+2026-03-09 02:44:32,981 | INFO     | run_pipeline | Step 5/7  Evaluating on held-out test set …
+2026-03-09 02:44:32,997 | INFO     | src.evaluation | [LinearSVM] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:44:33,071 | INFO     | src.evaluation | [ExtraTrees] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:44:33,080 | INFO     | src.evaluation | [XGBoost] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:44:33,089 | INFO     | src.evaluation | [LightGBM] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:44:33,092 | INFO     | run_pipeline | Step 6/7  Generating evaluation figures …
+2026-03-09 02:44:33,092 | INFO     | src.evaluation | Generating ROC curves …
+2026-03-09 02:44:33,331 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/roc_curves.png
+2026-03-09 02:44:33,331 | INFO     | src.model_training | Best model: ExtraTrees (val_recall=1.0000)
+2026-03-09 02:44:33,331 | INFO     | src.evaluation | Generating confusion matrix for ExtraTrees …
+2026-03-09 02:44:33,440 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/confusion_matrix_best.png
+2026-03-09 02:44:33,441 | INFO     | run_pipeline | Step 7/7  Saving model artefact …
+2026-03-09 02:44:33,602 | INFO     | src.prediction | CKDPredictor saved → /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:44:33,602 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:44:33,602 | INFO     | run_pipeline |   Pipeline complete.  Best model (by recall): ExtraTrees
+2026-03-09 02:44:33,602 | INFO     | run_pipeline |   Best model metrics (test): recall=1.0000  acc=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:44:33,602 | INFO     | run_pipeline |   Figures saved to : /workspaces/BME6938_Project_1/ckd_ml_project/logs
+2026-03-09 02:44:33,602 | INFO     | run_pipeline |   Model artefact   : /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:44:33,602 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:44:33,602 | INFO     | run_pipeline |   Launch the Streamlit app with:
+2026-03-09 02:44:33,602 | INFO     | run_pipeline |       streamlit run app/app.py
+2026-03-09 02:44:33,603 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:44:57,246 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:44:57,246 | INFO     | run_pipeline |   CKD Machine Learning Pipeline  —  Start
+2026-03-09 02:44:57,246 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:44:57,246 | INFO     | run_pipeline | Step 1/7  Loading dataset …
+2026-03-09 02:44:57,246 | INFO     | src.data_loader | Found ARFF file: /workspaces/BME6938_Project_1/ckd_ml_project/data/dataset.arff
+2026-03-09 02:44:57,247 | INFO     | src.data_loader | Loading ARFF dataset from: /workspaces/BME6938_Project_1/ckd_ml_project/data/dataset.arff
+2026-03-09 02:44:57,281 | INFO     | src.data_loader | Dataset loaded successfully — shape: (400, 26)
+2026-03-09 02:44:57,281 | INFO     | run_pipeline | Raw dataset shape: (400, 26)
+2026-03-09 02:44:57,281 | INFO     | run_pipeline | Step 2/7  Preprocessing …
+2026-03-09 02:44:57,282 | INFO     | src.preprocess | ─── Preprocessing pipeline start ───
+2026-03-09 02:44:57,282 | INFO     | src.preprocess | Columns after rename: ['id', 'age', 'blood_pressure', 'specific_gravity', 'albumin', 'sugar', 'red_blood_cells', 'pus_cell', 'pus_cell_clumps', 'bacteria', 'blood_glucose_random', 'blood_urea', 'serum_creatinine', 'sodium', 'potassium', 'hemoglobin', 'packed_cell_volume', 'white_blood_cell_count', 'red_blood_cell_count', 'hypertension', 'diabetes_mellitus', 'coronary_artery_disease', 'appetite', 'pedal_edema', 'anemia', 'class']
+2026-03-09 02:44:57,287 | INFO     | src.preprocess | Dropping 5 feature(s) with >20% missing: ['red_blood_cells', 'sodium', 'potassium', 'white_blood_cell_count', 'red_blood_cell_count']
+2026-03-09 02:44:57,497 | INFO     | src.preprocess | Running KNN imputation (k=5) on 20 features …
+2026-03-09 02:44:57,513 | INFO     | src.preprocess | Splitting dataset — train: 70%, val: 15%, test: 15% (n=400)
+2026-03-09 02:44:57,516 | INFO     | src.preprocess | Split sizes — train: 280, val: 60, test: 60
+2026-03-09 02:44:57,516 | INFO     | src.preprocess | Applying Z-score StandardScaler (fit on train only) …
+2026-03-09 02:44:57,517 | INFO     | src.preprocess | Applying SMOTE to training set (before: 280 samples, classes: {np.int64(0): np.int64(105), np.int64(1): np.int64(175)}) …
+2026-03-09 02:44:57,590 | INFO     | src.preprocess | After SMOTE: 350 samples, classes: {np.int64(0): np.int64(175), np.int64(1): np.int64(175)}
+2026-03-09 02:44:57,590 | INFO     | src.preprocess | Running LASSO (L1) feature selection (C=0.100) …
+2026-03-09 02:44:57,596 | INFO     | src.preprocess | LASSO selected 8 / 20 features: ['id', 'specific_gravity', 'albumin', 'blood_glucose_random', 'hemoglobin', 'packed_cell_volume', 'hypertension', 'diabetes_mellitus']
+2026-03-09 02:44:57,596 | INFO     | src.preprocess | ─── Preprocessing pipeline complete ───
+2026-03-09 02:44:57,596 | INFO     | run_pipeline | Train: 350  |  Val: 60  |  Test: 60  |  LASSO features: 8 / 20
+2026-03-09 02:44:57,596 | INFO     | run_pipeline | Step 3/7  Generating exploratory figures …
+2026-03-09 02:44:57,598 | INFO     | src.feature_analysis | Plotting class distribution …
+2026-03-09 02:44:57,799 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/class_distribution.png
+2026-03-09 02:44:57,800 | INFO     | src.feature_analysis | Generating correlation heatmap …
+2026-03-09 02:44:58,532 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/correlation_heatmap.png
+2026-03-09 02:44:58,532 | INFO     | src.feature_analysis | Computing feature importances (top 15) …
+2026-03-09 02:44:58,885 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/feature_importances.png
+2026-03-09 02:44:58,885 | INFO     | src.feature_analysis | Plotting LASSO coefficient magnitudes …
+2026-03-09 02:44:59,141 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/lasso_feature_selection.png
+2026-03-09 02:44:59,141 | INFO     | src.feature_analysis | Computing PCA (2 components) …
+2026-03-09 02:44:59,374 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/pca_scatter.png
+2026-03-09 02:44:59,374 | INFO     | run_pipeline | Step 4/7  Training models with GridSearchCV …
+2026-03-09 02:44:59,374 | INFO     | src.model_training | XGBoost available — included in model suite.
+2026-03-09 02:44:59,374 | INFO     | src.model_training | LightGBM available — included in model suite.
+2026-03-09 02:44:59,374 | INFO     | src.model_training | [1/4] Training LinearSVM …
+2026-03-09 02:45:03,768 | INFO     | src.model_training | LinearSVM — best_params={'C': 0.01}  val_recall=0.9737  val_acc=0.9833  elapsed=4.4s
+2026-03-09 02:45:03,768 | INFO     | src.model_training | [2/4] Training ExtraTrees …
+2026-03-09 02:45:51,602 | INFO     | src.model_training | ExtraTrees — best_params={'max_depth': None, 'min_samples_split': 2, 'n_estimators': 100}  val_recall=1.0000  val_acc=1.0000  elapsed=47.8s
+2026-03-09 02:45:51,602 | INFO     | src.model_training | [3/4] Training XGBoost …
+2026-03-09 02:45:54,747 | INFO     | src.model_training | XGBoost — best_params={'learning_rate': 0.05, 'max_depth': 3, 'n_estimators': 100}  val_recall=1.0000  val_acc=1.0000  elapsed=3.1s
+2026-03-09 02:45:54,748 | INFO     | src.model_training | [4/4] Training LightGBM …
+2026-03-09 02:46:15,768 | INFO     | src.model_training | LightGBM — best_params={'learning_rate': 0.05, 'max_depth': -1, 'n_estimators': 100, 'num_leaves': 31}  val_recall=1.0000  val_acc=1.0000  elapsed=21.0s
+2026-03-09 02:46:15,768 | INFO     | run_pipeline | Step 5/7  Evaluating on held-out test set …
+2026-03-09 02:46:15,782 | INFO     | src.evaluation | [LinearSVM] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:46:15,835 | INFO     | src.evaluation | [ExtraTrees] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:46:15,845 | INFO     | src.evaluation | [XGBoost] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:46:15,860 | INFO     | src.evaluation | [LightGBM] acc=1.0000  prec=1.0000  rec=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:46:15,863 | INFO     | run_pipeline | Step 6/7  Generating evaluation figures …
+2026-03-09 02:46:15,864 | INFO     | src.evaluation | Generating ROC curves …
+2026-03-09 02:46:16,097 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/roc_curves.png
+2026-03-09 02:46:16,097 | INFO     | src.model_training | Best model: ExtraTrees (val_recall=1.0000)
+2026-03-09 02:46:16,097 | INFO     | src.evaluation | Generating confusion matrix for ExtraTrees …
+2026-03-09 02:46:16,234 | INFO     | run_pipeline | Figure saved → /workspaces/BME6938_Project_1/ckd_ml_project/logs/confusion_matrix_best.png
+2026-03-09 02:46:16,235 | INFO     | run_pipeline | Step 7/7  Saving model artefact …
+2026-03-09 02:46:16,341 | INFO     | src.prediction | CKDPredictor saved → /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:46:16,341 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:46:16,341 | INFO     | run_pipeline |   Pipeline complete.  Best model (by recall): ExtraTrees
+2026-03-09 02:46:16,341 | INFO     | run_pipeline |   Best model metrics (test): recall=1.0000  acc=1.0000  f1=1.0000  auc=1.0000
+2026-03-09 02:46:16,342 | INFO     | run_pipeline |   Figures saved to : /workspaces/BME6938_Project_1/ckd_ml_project/logs
+2026-03-09 02:46:16,342 | INFO     | run_pipeline |   Model artefact   : /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:46:16,342 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:46:16,342 | INFO     | run_pipeline |   Launch the Streamlit app with:
+2026-03-09 02:46:16,342 | INFO     | run_pipeline |       streamlit run app/app.py
+2026-03-09 02:46:16,342 | INFO     | run_pipeline | =================================================================
+2026-03-09 02:50:42,133 | INFO     | src.prediction | Loading CKDPredictor from /workspaces/BME6938_Project_1/ckd_ml_project/models/ckd_pipeline.joblib
+2026-03-09 02:50:46,226 | INFO     | src.data_loader | Loading ARFF dataset from: UploadedFile(file_id='db30d3d3-5422-486a-8f7a-313bdbc67b0f', name='dataset.arff', type='application/octet-stream', size=50102, _file_urls=file_id: "db30d3d3-5422-486a-8f7a-313bdbc67b0f"
+upload_url: "/_stcore/upload_file/1769ba73-b5aa-4b12-95a4-27b688b21629/db30d3d3-5422-486a-8f7a-313bdbc67b0f"
+delete_url: "/_stcore/upload_file/1769ba73-b5aa-4b12-95a4-27b688b21629/db30d3d3-5422-486a-8f7a-313bdbc67b0f"
+)
+2026-03-09 02:50:46,230 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'rbc' (column 6).
+2026-03-09 02:50:46,230 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'pc' (column 7).
+2026-03-09 02:50:46,230 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'pcc' (column 8).
+2026-03-09 02:50:46,230 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'ba' (column 9).
+2026-03-09 02:50:46,231 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'pcv' (column 16).
+2026-03-09 02:50:46,231 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'wc' (column 17).
+2026-03-09 02:50:46,231 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'rc' (column 18).
+2026-03-09 02:50:46,231 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'htn' (column 19).
+2026-03-09 02:50:46,231 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'dm' (column 20).
+2026-03-09 02:50:46,231 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'cad' (column 21).
+2026-03-09 02:50:46,231 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'appet' (column 22).
+2026-03-09 02:50:46,231 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'pe' (column 23).
+2026-03-09 02:50:46,232 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'ane' (column 24).
+2026-03-09 02:50:46,232 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'classification' (column 25).
+2026-03-09 02:50:46,234 | WARNING  | src.data_loader | The following STRING attributes were removed before parsing (scipy does not support them): ['rbc', 'pc', 'pcc', 'ba', 'pcv', 'wc', 'rc', 'htn', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification']
+2026-03-09 02:50:46,241 | INFO     | src.data_loader | Dataset loaded successfully — shape: (400, 12)
+2026-03-09 02:51:00,685 | INFO     | src.data_loader | Loading ARFF dataset from: UploadedFile(file_id='db30d3d3-5422-486a-8f7a-313bdbc67b0f', name='dataset.arff', type='application/octet-stream', size=50102, _file_urls=file_id: "db30d3d3-5422-486a-8f7a-313bdbc67b0f"
+upload_url: "/_stcore/upload_file/1769ba73-b5aa-4b12-95a4-27b688b21629/db30d3d3-5422-486a-8f7a-313bdbc67b0f"
+delete_url: "/_stcore/upload_file/1769ba73-b5aa-4b12-95a4-27b688b21629/db30d3d3-5422-486a-8f7a-313bdbc67b0f"
+)
+2026-03-09 02:51:00,690 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'rbc' (column 6).
+2026-03-09 02:51:00,690 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'pc' (column 7).
+2026-03-09 02:51:00,690 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'pcc' (column 8).
+2026-03-09 02:51:00,690 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'ba' (column 9).
+2026-03-09 02:51:00,691 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'pcv' (column 16).
+2026-03-09 02:51:00,691 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'wc' (column 17).
+2026-03-09 02:51:00,691 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'rc' (column 18).
+2026-03-09 02:51:00,691 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'htn' (column 19).
+2026-03-09 02:51:00,691 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'dm' (column 20).
+2026-03-09 02:51:00,691 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'cad' (column 21).
+2026-03-09 02:51:00,691 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'appet' (column 22).
+2026-03-09 02:51:00,691 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'pe' (column 23).
+2026-03-09 02:51:00,692 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'ane' (column 24).
+2026-03-09 02:51:00,692 | WARNING  | src.data_loader | Dropping unsupported STRING attribute 'classification' (column 25).
+2026-03-09 02:51:00,693 | WARNING  | src.data_loader | The following STRING attributes were removed before parsing (scipy does not support them): ['rbc', 'pc', 'pcc', 'ba', 'pcv', 'wc', 'rc', 'htn', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification']
+2026-03-09 02:51:00,700 | INFO     | src.data_loader | Dataset loaded successfully — shape: (400, 12)
+2026-03-09 02:51:00,833 | INFO     | src.preprocess | ─── Preprocessing pipeline start ───
+2026-03-09 02:51:00,834 | INFO     | src.preprocess | Columns after rename: ['id', 'age', 'blood_pressure', 'specific_gravity', 'albumin', 'sugar', 'blood_glucose_random', 'blood_urea', 'serum_creatinine', 'sodium', 'potassium', 'hemoglobin']
+2026-03-09 02:55:50,318 | INFO     | src.data_loader | Loading ARFF dataset from: <_io.BytesIO object at 0x71820ec228e0>
+2026-03-09 02:55:50,318 | WARNING  | src.data_loader | STRING attribute 'rbc' (column 3) will be converted to nominal.
+2026-03-09 02:55:50,318 | WARNING  | src.data_loader | STRING attribute 'htn' (column 4) will be converted to nominal.
+2026-03-09 02:55:50,318 | WARNING  | src.data_loader | STRING attribute 'dm' (column 5) will be converted to nominal.
+2026-03-09 02:55:50,319 | WARNING  | src.data_loader | STRING attribute 'class' (column 6) will be converted to nominal.
+2026-03-09 02:55:50,319 | INFO     | src.data_loader | Converted STRING attribute 'rbc' → nominal with 2 unique value(s): abnormal,normal
+2026-03-09 02:55:50,319 | INFO     | src.data_loader | Converted STRING attribute 'htn' → nominal with 2 unique value(s): no,yes
+2026-03-09 02:55:50,319 | INFO     | src.data_loader | Converted STRING attribute 'dm' → nominal with 2 unique value(s): no,yes
+2026-03-09 02:55:50,319 | INFO     | src.data_loader | Converted STRING attribute 'class' → nominal with 2 unique value(s): ckd,notckd
+2026-03-09 02:55:50,319 | INFO     | src.data_loader | Converted 4 STRING attribute(s) to nominal: ['rbc', 'htn', 'dm', 'class']
+2026-03-09 02:55:50,322 | INFO     | src.data_loader | Dataset loaded successfully — shape: (3, 7)

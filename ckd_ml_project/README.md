@@ -269,11 +269,9 @@ ckd_ml_project/
 
 | Name | Role |
 |---|---|
-| *(Your Name)* | Data preprocessing pipeline, feature engineering, KNN imputation |
-| *(Team Member 2)* | Model training module, hyperparameter tuning, GridSearchCV implementation |
-| *(Team Member 3)* | Evaluation metrics, ROC/confusion matrix visualisations |
-| *(Team Member 4)* | Streamlit application design, interactive CKD prediction interface |
-| *(Team Member 5)* | Clinical context research, documentation, README, code review |
+| *(Quinn Mullings)* | Model delvelopment and implementation, analysis of methods and data. 
+| *(Team Member 2)* | 
+| *(Team Member 3)* |
 
 > Update the table above with your actual team members and their specific contributions before submission.
 

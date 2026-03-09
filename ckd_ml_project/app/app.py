@@ -207,10 +207,31 @@ with tab_data:
 
     if uploaded is not None:
         from src.data_loader import load_arff
+        import re as _re
         with st.spinner("Parsing ARFF …"):
             try:
+                # Detect STRING attributes before passing to the parser so we
+                # can notify the user that those columns will be dropped.
+                raw_text = uploaded.read()
+                if isinstance(raw_text, bytes):
+                    raw_text = raw_text.decode("utf-8", errors="ignore")
+                string_attrs = _re.findall(
+                    r"@attribute\s+['\"]?(\S+?)['\"]?\s+STRING",
+                    raw_text,
+                    _re.IGNORECASE,
+                )
+                uploaded.seek(0)  # reset so load_arff can read the file again
+
                 df = load_arff(uploaded)
                 st.session_state["df_raw"] = df
+                if string_attrs:
+                    st.warning(
+                        f"The following STRING-typed attribute(s) are not natively "
+                        f"supported by the ARFF parser and were automatically converted "
+                        f"to nominal (categorical) before loading: "
+                        f"**{', '.join(string_attrs)}**. "
+                        f"All columns, including the target, were preserved."
+                    )
                 st.success(
                     f"Dataset loaded — **{df.shape[0]}** samples × **{df.shape[1]}** columns"
                 )

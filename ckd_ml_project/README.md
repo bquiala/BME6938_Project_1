@@ -7,13 +7,14 @@
 ## Table of Contents
 
 1. [Clinical Context](#clinical-context)
-2. [Quick Start](#quick-start)
-3. [Usage Guide](#usage-guide)
-4. [Data Description](#data-description)
-5. [Results Summary](#results-summary)
-6. [Project Structure](#project-structure)
-7. [Authors and Contributions](#authors-and-contributions)
-8. [Dependencies](#dependencies)
+2. [Running Locally — Step by Step](#running-locally--step-by-step)
+3. [Troubleshooting](#troubleshooting)
+4. [Usage Guide](#usage-guide)
+5. [Data Description](#data-description)
+6. [Results Summary](#results-summary)
+7. [Project Structure](#project-structure)
+8. [Authors and Contributions](#authors-and-contributions)
+9. [Dependencies](#dependencies)
 
 ---
 
@@ -31,54 +32,127 @@ By combining these features through a trained ensemble model, the system can det
 
 ---
 
-## Quick Start
+## Running Locally — Step by Step
 
-### Prerequisites
+### Step 1 — Install Git and Python
 
-- **Python 3.10 or later**
-- `pip`
+Download and install both tools before doing anything else.
 
-### Installation
+- **Git**: https://git-scm.com/downloads
+- **Python 3.11**: https://www.python.org/downloads/
+  - Python 3.11 is recommended. 3.12+ may have minor compatibility friction with some pinned library versions.
+
+> **Windows:** During the Python installer, tick **"Add Python to PATH"** or the `python` command will not be found in your terminal.
+
+Verify the installs worked by opening a terminal and running:
+```
+git --version
+python --version
+```
+Both should print a version number without errors.
+
+---
+
+### Step 2 — Clone the Repository
+
+Open a terminal (see OS notes below) and run:
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/<your-username>/BME6938_Project_1.git
+git clone https://github.com/bquiala/BME6938_Project_1.git
 cd BME6938_Project_1/ckd_ml_project
+```
 
-# 2. (Optional) Create and activate a virtual environment
+> **Which terminal to use:**
+> - **Windows** — use **Command Prompt** (`cmd.exe`). Search for it in the Start menu. Avoid PowerShell for this project (see Troubleshooting).
+> - **macOS** — use **Terminal** (Applications → Utilities → Terminal).
+> - **Linux** — any terminal emulator.
+
+---
+
+### Step 3 — Create a Virtual Environment
+
+A virtual environment keeps this project's packages isolated from the rest of your machine. Run this once inside the `ckd_ml_project` folder:
+
+```bash
 python -m venv .venv
-source .venv/bin/activate   # macOS / Linux
-.venv\Scripts\activate      # Windows
+```
 
-# 3. Install dependencies
+Then **activate** it. The command differs by OS:
+
+| OS | Terminal | Activation command |
+|---|---|---|
+| Windows | Command Prompt (`cmd.exe`) | `.venv\Scripts\activate.bat` |
+| Windows | PowerShell | See Troubleshooting — use cmd instead |
+| macOS / Linux | Terminal | `source .venv/bin/activate` |
+
+When the venv is active you will see `(.venv)` at the start of your prompt. You must activate it every time you open a new terminal window.
+
+---
+
+### Step 4 — Install Dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### Run the Pipeline
+This downloads and installs all required packages (scikit-learn, XGBoost, LightGBM, Streamlit, etc.). It takes a few minutes the first time.
+
+---
+
+### Step 5 — Train the Model
+
+The dataset is already included in `data/dataset.arff`. Run the full pipeline:
 
 ```bash
-# Trains all models, evaluates them, and saves the best model artefact.
-# Place your chronic_kidney_disease.arff in data/ first.
 python run_pipeline.py
-
-# Optional: specify a custom dataset path
-python run_pipeline.py --data path/to/your_dataset.arff
 ```
 
-Expected runtime: **3–10 minutes** on a modern laptop (varies with hardware and
-whether GridSearchCV parallelism is available).
+This preprocesses the data, trains four models with cross-validation, evaluates them on a held-out test set, and saves the best model to `models/ckd_pipeline.joblib`. You will see progress logs in the terminal. **Expected runtime: 3–10 minutes** depending on your hardware.
 
-### Launch the Streamlit Application
+When complete you will see a results table:
+```
+=================================================================
+  MODEL COMPARISON — Test Set
+=================================================================
+            accuracy  precision  recall     f1  roc_auc
+Model
+LinearSVM     1.0000     1.0000  1.0000 1.0000   1.0000
+ExtraTrees    0.9833     0.9737  1.0000 0.9867   1.0000
+...
+=================================================================
+```
+
+---
+
+### Step 6 — Launch the Web App
 
 ```bash
 streamlit run app/app.py
 ```
 
-Then open **http://localhost:8501** in your browser.
+Your browser will open automatically at **http://localhost:8501**. If it does not, open that URL manually.
 
+---
 
-**Computational requirements:** any modern CPU; no GPU required.
-8 GB RAM recommended for the full GridSearchCV grid.
+### Every Time You Return to the Project
+
+```bash
+# Windows (cmd)
+cd BME6938_Project_1\ckd_ml_project
+.venv\Scripts\activate.bat
+streamlit run app/app.py
+
+# macOS / Linux
+cd BME6938_Project_1/ckd_ml_project
+source .venv/bin/activate
+streamlit run app/app.py
+```
+
+You do not need to run `pip install` or `python run_pipeline.py` again unless you have deleted the venv or want to retrain the model.
+
+---
+
+**Computational requirements:** any modern CPU; no GPU required. 8 GB RAM recommended.
 
 ---
 
@@ -272,6 +346,102 @@ ckd_ml_project/
 | *(Quinn Mullings)* | Model delvelopment and implementation, analysis of methods and data, results and evidence
 | *(Bryan Quiala)* | Literature Review, Discussion & Limitations
 | *(James Garner)* | Abstract, Introduction, Results and Evidence
+
+---
+
+## Troubleshooting
+
+### Step 1 — Git / Python not found after installing
+
+| OS | Fix |
+|---|---|
+| Windows | Re-run the Python installer, tick **"Add Python to PATH"**, then restart your terminal |
+| macOS | Install via `brew install python@3.11` if the system Python is too old |
+
+---
+
+### Step 3 — Virtual environment activation fails on Windows PowerShell
+
+**Error:**
+```
+File .venv\Scripts\Activate.ps1 cannot be loaded because running scripts
+is disabled on this system.
+```
+
+**Cause:** PowerShell blocks unsigned scripts by default.
+
+**Fix A (recommended) — switch to Command Prompt:**
+Open `cmd.exe` instead of PowerShell and run:
+```cmd
+.venv\Scripts\activate.bat
+```
+
+**Fix B — change the PowerShell execution policy:**
+Open PowerShell **as Administrator** and run once:
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+Then re-run `.venv\Scripts\activate` in a normal PowerShell window.
+
+---
+
+### Step 3 — `source` is not a recognised command (Windows)
+
+**Error:**
+```
+'source' is not recognized as an internal or external command
+```
+
+**Cause:** `source` is a macOS/Linux shell built-in. It does not exist on Windows.
+
+**Fix:** Use the Windows-specific command instead:
+```cmd
+.venv\Scripts\activate.bat
+```
+
+---
+
+### Step 4 — LightGBM install fails on Windows
+
+**Cause:** LightGBM requires the Microsoft Visual C++ Redistributable.
+
+**Fix:** Download and install it from https://aka.ms/vs/17/release/vc_redist.x64.exe, then re-run `pip install -r requirements.txt`.
+
+---
+
+### Step 5 — `python` opens the Windows Store instead of running
+
+**Fix:** During the Python installer, make sure **"Add Python to PATH"** was checked. If not, uninstall and reinstall Python with that option ticked. Alternatively, try using `py` instead of `python`:
+```cmd
+py run_pipeline.py
+```
+
+---
+
+### Step 6 — `streamlit: command not found`
+
+**Cause:** The virtual environment is not activated, so the `streamlit` executable is not on your PATH.
+
+**Fix:** Activate the venv first (Step 3), then run the streamlit command.
+
+---
+
+### Step 6 — Port 8501 already in use
+
+If another Streamlit instance is already running, start the app on a different port:
+```bash
+streamlit run app/app.py --server.port 8502
+```
+Then navigate to **http://localhost:8502**.
+
+---
+
+### Step 6 — "No trained predictor found" error in the app
+
+The app requires a trained model file at `models/ckd_pipeline.joblib`. Run the pipeline first:
+```bash
+python run_pipeline.py
+```
 
 ---
 

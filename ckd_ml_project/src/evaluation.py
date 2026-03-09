@@ -234,3 +234,160 @@ def plot_confusion_matrix(
     ax.tick_params(colors=_PALETTE["text"])
     plt.tight_layout()
     return fig
+
+
+def plot_metrics_comparison(metrics_df: pd.DataFrame) -> plt.Figure:
+    """
+    Grouped bar chart comparing Accuracy, Precision, Recall, F1, and ROC-AUC
+    across all trained models on the held-out test set.
+
+    Parameters
+    ----------
+    metrics_df : pd.DataFrame
+        Output of :func:`evaluate_all_models` (index = model name).
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
+    logger.info("Generating metrics comparison chart …")
+
+    metric_cols = ["accuracy", "precision", "recall", "f1", "roc_auc"]
+    present_cols = [c for c in metric_cols if c in metrics_df.columns]
+    display_names = {
+        "accuracy":  "Accuracy",
+        "precision": "Precision",
+        "recall":    "Recall",
+        "f1":        "F1-Score",
+        "roc_auc":   "ROC-AUC",
+    }
+
+    models = metrics_df.index.tolist()
+    x = np.arange(len(present_cols))
+    width = 0.8 / max(len(models), 1)
+
+    fig, ax = plt.subplots(figsize=(11, 6), facecolor=_PALETTE["background"])
+    ax.set_facecolor(_PALETTE["background"])
+
+    colors = sns.color_palette("Set2", len(models))
+    for i, (model, color) in enumerate(zip(models, colors)):
+        vals = [float(metrics_df.loc[model, c]) for c in present_cols]
+        offsets = x + (i - len(models) / 2 + 0.5) * width
+        bars = ax.bar(offsets, vals, width * 0.92, label=model, color=color)
+        for bar, val in zip(bars, vals):
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 0.007,
+                f"{val:.3f}",
+                ha="center", va="bottom", fontsize=7.5, color=_PALETTE["text"],
+            )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(
+        [display_names[c] for c in present_cols],
+        color=_PALETTE["text"], fontsize=11,
+    )
+    ax.set_ylabel("Score", color=_PALETTE["text"])
+    ax.set_ylim(0, 1.15)
+    ax.set_title(
+        "Classification Metrics — All Models (Test Set)",
+        fontsize=13, color=_PALETTE["text"],
+    )
+    ax.legend(fontsize=9, loc="lower right")
+    ax.tick_params(colors=_PALETTE["text"])
+    ax.yaxis.grid(True, color=_PALETTE["grid"], linestyle="--", alpha=0.7)
+    ax.set_axisbelow(True)
+    for spine in ax.spines.values():
+        spine.set_edgecolor(_PALETTE["grid"])
+    plt.tight_layout()
+    return fig
+
+
+def plot_cv_scores(train_results: dict) -> plt.Figure:
+    """
+    Box plot of per-fold cross-validation recall scores for each model,
+    drawn from the best hyper-parameter combination found during GridSearchCV.
+
+    Parameters
+    ----------
+    train_results : dict
+        Output of :func:`src.model_training.train_models`.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
+    logger.info("Generating cross-validation scores chart …")
+
+    model_names: list[str] = []
+    fold_scores_list: list[list[float]] = []
+
+    for name, info in train_results.items():
+        cv_res = info.get("cv_results", {})
+
+        if not cv_res:
+            # No grid search was run — use val_score as a single data point
+            model_names.append(name)
+            fold_scores_list.append([float(info["val_score"])])
+            continue
+
+        mean_scores = cv_res.get("mean_test_score", np.array([]))
+        if len(mean_scores) == 0:
+            model_names.append(name)
+            fold_scores_list.append([float(info["val_score"])])
+            continue
+
+        best_idx = int(np.argmax(mean_scores))
+        fold_keys = sorted(
+            k for k in cv_res
+            if k.startswith("split") and k.endswith("_test_score")
+        )
+        if fold_keys:
+            fold_scores = [float(cv_res[k][best_idx]) for k in fold_keys]
+        else:
+            fold_scores = [float(mean_scores[best_idx])]
+
+        model_names.append(name)
+        fold_scores_list.append(fold_scores)
+
+    fig, ax = plt.subplots(figsize=(9, 5), facecolor=_PALETTE["background"])
+    ax.set_facecolor(_PALETTE["background"])
+
+    colors = sns.color_palette("Set2", len(model_names))
+    bp = ax.boxplot(
+        fold_scores_list,
+        patch_artist=True,
+        notch=False,
+        medianprops=dict(color=_PALETTE["text"], linewidth=2),
+        whiskerprops=dict(color=_PALETTE["text"]),
+        capprops=dict(color=_PALETTE["text"]),
+        flierprops=dict(marker="o", markerfacecolor=_PALETTE["pink"], markersize=5),
+    )
+    for patch, color in zip(bp["boxes"], colors):
+        patch.set_facecolor(color)
+        patch.set_alpha(0.75)
+
+    rng = np.random.default_rng(42)
+    for i, (scores, color) in enumerate(zip(fold_scores_list, colors), start=1):
+        jitter = rng.uniform(-0.12, 0.12, len(scores))
+        ax.scatter(
+            np.full(len(scores), i) + jitter,
+            scores,
+            color=color, s=22, zorder=3, alpha=0.85, edgecolors="white", linewidths=0.4,
+        )
+
+    ax.set_xticks(range(1, len(model_names) + 1))
+    ax.set_xticklabels(model_names, color=_PALETTE["text"], fontsize=10)
+    ax.set_ylabel("Recall (CV Fold)", color=_PALETTE["text"])
+    ax.set_ylim(0, 1.08)
+    ax.set_title(
+        "Cross-Validation Recall Scores — Best Hyper-parameter Set per Model",
+        fontsize=13, color=_PALETTE["text"],
+    )
+    ax.tick_params(colors=_PALETTE["text"])
+    ax.yaxis.grid(True, color=_PALETTE["grid"], linestyle="--", alpha=0.7)
+    ax.set_axisbelow(True)
+    for spine in ax.spines.values():
+        spine.set_edgecolor(_PALETTE["grid"])
+    plt.tight_layout()
+    return fig

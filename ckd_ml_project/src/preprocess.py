@@ -11,11 +11,13 @@ Pipeline stages
 4.  Drop features whose missing-value rate exceeds ``MISSING_THRESHOLD`` (20%).
 5.  Label-encode categorical (non-numeric) columns.
 6.  Convert all columns to numeric dtype.
-7.  KNN-impute remaining NaN values (k=5, preserves data distribution).
-8.  Stratified 70 / 15 / 15 train / validation / test split.
-9.  Z-score normalisation (StandardScaler) fit on train only.
-10. SMOTE oversampling applied to the training set only (prevents data leakage).
-11. LASSO (L1, LogisticRegression) feature selection on SMOTE-balanced train set.
+7.  Drop the non-clinical ``id`` column (sequential patient index, not predictive).
+8.  Stratified 70 / 15 / 15 train / validation / test split (performed BEFORE
+    imputation to prevent test-set rows from influencing imputed training values).
+9.  KNN-impute remaining NaN values (k=5, fit on train only; transform val/test).
+10. Z-score normalisation (StandardScaler) fit on train only.
+11. SMOTE oversampling applied to the training set only (prevents data leakage).
+12. LASSO (L1, LogisticRegression) feature selection on SMOTE-balanced train set.
     Selected feature mask is stored and applied to all three splits.
 """
 
@@ -69,7 +71,7 @@ COLUMN_RENAME_MAP: dict[str, str] = {
     "appet": "appetite",
     "pe":    "pedal_edema",
     "ane":   "anemia",
-    "class": "class",
+    "class": "classification",
 }
 
 # Known positive / negative CKD label variants (after lowercasing & stripping)
@@ -230,31 +232,35 @@ def preprocess(df: pd.DataFrame) -> dict:
     # ── Step 6: Coerce everything to numeric ─────────────────────────────────
     df = df.apply(pd.to_numeric, errors="coerce")
 
-    # ── Step 7: KNN imputation ───────────────────────────────────────────────
+    # ── Step 7: Drop non-clinical identifier column ───────────────────────────
+    # 'id' is a sequential patient index with no predictive value; retaining it
+    # allows models to memorise the training set by row number.
+    if "id" in df.columns:
+        df = df.drop(columns=["id"])
+        logger.info("Dropped non-clinical 'id' column from features.")
+
     feature_names = df.columns.tolist()
-    logger.info("Running KNN imputation (k=%d) on %d features …", KNN_NEIGHBORS, len(feature_names))
-    imputer = KNNImputer(n_neighbors=KNN_NEIGHBORS)
-    X_imputed = imputer.fit_transform(df)
-    df_clean = pd.DataFrame(X_imputed, columns=feature_names)
-    df_clean[TARGET_COLUMN] = target.values
+    X_all = df.values
+    y_all = target.values
 
     # ── Step 8: Stratified train / (val + test) split ────────────────────────
+    # The split is performed BEFORE imputation so that KNN imputer fitting
+    # uses only training-set rows.  Imputing with test-set rows included would
+    # let test-sample feature distributions influence the imputed training
+    # values, constituting data leakage and inflating reported accuracy.
     # 70 % train, 15 % val, 15 % test
-    X = df_clean[feature_names].values
-    y = df_clean[TARGET_COLUMN].values
-
     logger.info(
-        "Splitting dataset — train: 70%%, val: 15%%, test: 15%% (n=%d)", len(y)
+        "Splitting dataset — train: 70%%, val: 15%%, test: 15%% (n=%d)", len(y_all)
     )
-    X_train, X_temp, y_train, y_temp = train_test_split(
-        X, y,
+    X_train_raw, X_temp_raw, y_train, y_temp = train_test_split(
+        X_all, y_all,
         train_size=TRAIN_SIZE,
-        stratify=y,
+        stratify=y_all,
         random_state=RANDOM_STATE,
     )
     # Split the remaining 30 % evenly (50/50 → 15/15 of total)
-    X_val, X_test, y_val, y_test = train_test_split(
-        X_temp, y_temp,
+    X_val_raw, X_test_raw, y_val, y_test = train_test_split(
+        X_temp_raw, y_temp,
         test_size=TEST_SIZE,
         stratify=y_temp,
         random_state=RANDOM_STATE,
@@ -263,12 +269,30 @@ def preprocess(df: pd.DataFrame) -> dict:
         "Split sizes — train: %d, val: %d, test: %d", len(y_train), len(y_val), len(y_test)
     )
 
-    # ── Step 9: Z-score normalisation (fit on train only) ────────────────────
+    # ── Step 9: KNN imputation (fit on train only) ────────────────────────────
+    # The imputer is fitted exclusively on the training split so that missing-
+    # value fill decisions are blind to validation/test sample values.
+    # The held-out splits are then transformed (not re-fitted) using the
+    # training-derived imputer — the CKD label is never used as an input.
+    logger.info("Running KNN imputation (k=%d) on %d features …", KNN_NEIGHBORS, len(feature_names))
+    imputer = KNNImputer(n_neighbors=KNN_NEIGHBORS)
+    X_train_imp = imputer.fit_transform(X_train_raw)   # fit on train only
+    X_val_imp   = imputer.transform(X_val_raw)          # transform only — no leakage
+    X_test_imp  = imputer.transform(X_test_raw)         # transform only — no leakage
+
+    # Build df_clean for visualisation (correlation heatmap).  The training
+    # imputer is applied to all samples so the heatmap shows the full dataset,
+    # but the imputer itself was trained without knowledge of val/test labels.
+    X_all_imp = imputer.transform(X_all)
+    df_clean = pd.DataFrame(X_all_imp, columns=feature_names)
+    df_clean[TARGET_COLUMN] = y_all
+
+    # ── Step 10: Z-score normalisation (fit on train only) ────────────────────
     logger.info("Applying Z-score StandardScaler (fit on train only) …")
     scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_val   = scaler.transform(X_val)
-    X_test  = scaler.transform(X_test)
+    X_train = scaler.fit_transform(X_train_imp)
+    X_val   = scaler.transform(X_val_imp)
+    X_test  = scaler.transform(X_test_imp)
 
     # ── Step 10: SMOTE oversampling (train set only) ──────────────────────────
     # Applied AFTER scaling and ONLY to the training split to avoid data leakage.

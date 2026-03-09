@@ -38,7 +38,7 @@ for _directory in [DATA_DIR, MODELS_DIR, LOGS_DIR, NOTEBOOKS_DIR]:
 RANDOM_STATE: int = 42
 
 # ─── Dataset ─────────────────────────────────────────────────────────────────
-TARGET_COLUMN: str = "class"
+TARGET_COLUMN: str = "classification"
 MISSING_THRESHOLD: float = 0.20   # drop features with > 20 % missing values
 KNN_NEIGHBORS: int = 5            # neighbours used by KNNImputer
 

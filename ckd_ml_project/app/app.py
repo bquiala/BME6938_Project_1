@@ -415,7 +415,26 @@ with tab_viz:
             plot_lasso_coefficients,
             plot_pca_scatter,
         )
-        from src.evaluation import plot_confusion_matrix, plot_roc_curve
+        from src.evaluation import (
+            plot_confusion_matrix,
+            plot_cv_scores,
+            plot_metrics_comparison,
+            plot_roc_curve,
+        )
+
+        # ── Row 0: Metrics comparison bar chart ───────────────────────────────
+        if train_results is not None and st.session_state["metrics_df"] is not None:
+            st.subheader("Classification Metrics — All Models")
+            fig_metrics = plot_metrics_comparison(st.session_state["metrics_df"])
+            st.pyplot(fig_metrics, use_container_width=True)
+            st.markdown("---")
+
+        # ── Row 0.5: Cross-validation scores ──────────────────────────────────
+        if train_results is not None:
+            st.subheader("Cross-Validation Recall Scores (10-Fold)")
+            fig_cv = plot_cv_scores(train_results)
+            st.pyplot(fig_cv, use_container_width=True)
+            st.markdown("---")
 
         # ── Row 1: Class distribution + Correlation heatmap ───────────────────
         col_a, col_b = st.columns([1, 2])
@@ -446,7 +465,7 @@ with tab_viz:
         if train_results is not None:
             col_c, col_d = st.columns(2)
             with col_c:
-                st.subheader("ROC Curves — All Models")
+                st.subheader("ROC Curves & AUC — All Models")
                 fig_roc = plot_roc_curve(
                     train_results,
                     pipeline_data["X_test"],

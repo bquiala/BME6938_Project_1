@@ -32,6 +32,11 @@ By combining these features through a trained ensemble model, the system can det
 
 ---
 
+## Development Disclaimer
+This model was developed largely using the help from copilot's agent tool. GPT-5.4 was used to generate the plan/skeleton for the model, Claude Sonnet 4.6 was used to build out the majority of  the infrastructure, and Gemini 2.5 Pro was used for troubleshooting and pinpoint fixes. 
+
+---
+
 ## Running Locally — Step by Step
 
 ### Step 1 — Install Git and Python
@@ -287,12 +292,12 @@ Your exact numbers may vary slightly depending on your scikit-learn version.
 
 | Model | Accuracy | Precision | Recall | F1 | ROC-AUC |
 |---|---|---|---|---|---|
-| Logistic Regression | ~96 % | ~97 % | ~97 % | ~97 % | ~0.99 |
-| **Random Forest** | **~98 %** | **~98 %** | **~99 %** | **~98 %** | **~1.00** |
-| SVM | ~97 % | ~97 % | ~99 % | ~98 % | ~0.99 |
-| Gradient Boosting | ~97 % | ~97 % | ~98 % | ~98 % | ~1.00 |
+| Logistic Regression | ~98.3 % | ~97.4 % | ~100 % | ~98.7 % | ~1.00 |
+| Random Forest | ~98.3 % | ~97.4 % | ~100 % | ~98.7 % | ~1.00 |
+| SVM | ~100 % | ~100 % | ~100 % | ~100 % | ~1.00 |
+| Gradient Boosting | ~98.3 % | ~97.4 % | ~100 % | ~98.7 % | ~0.99 |
 
-**Best model:** Random Forest (or Gradient Boosting — both typically achieve near-perfect AUC on this dataset).
+**Highest performing model:** Linear SVM
 
 **Key findings:**
 - Hemoglobin, specific gravity, and albumin are consistently the strongest predictors.

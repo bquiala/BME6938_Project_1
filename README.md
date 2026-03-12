@@ -274,15 +274,7 @@ Please cite:
 > Dua, D. and Graff, C. (2019). UCI Machine Learning Repository.
 > Irvine, CA: University of California, School of Information and Computer Science.
 
-### How to Obtain the Data
-
-1. Download from UCI: https://archive.ics.uci.edu/ml/datasets/Chronic_Kidney_Disease
-2. Download directly from OpenML: `https://www.openml.org/d/40536`
-3. Place the `chronic_kidney_disease.arff` file in the `data/` directory.
-
-> The dataset is **not bundled** with this repository due to licence considerations.
-
----
+Data downloaded directly from OpenML: `https://www.openml.org/d/40536`
 
 ## Results Summary
 
